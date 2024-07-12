@@ -34,10 +34,21 @@ const SendMessageSchema = z.object({
   content: z.string(),
 });
 
+const SetInputSchema = z.object({
+  type: z.literal("set_input"),
+  content: z.string(),
+});
+
+const SubmitInputSchema = z.object({
+  type: z.literal("submit_input"),
+});
+
 const PayloadSchema = z.discriminatedUnion("type", [
   ClaudeStateSchema,
   MessageSchema,
   SendMessageSchema,
+  SetInputSchema,
+  SubmitInputSchema,
 ]);
 
 type Payload = z.infer<typeof PayloadSchema>;
@@ -81,7 +92,9 @@ async function processWebSocketMessage(data: unknown): Promise<void> {
         await updateLogEntry(payload);
         break;
       case "send_message":
-        console.log("Sending message to Claude:", payload.content);
+      case "set_input":
+      case "submit_input":
+        console.log(`Received ${payload.type} event`);
         // Send the message to all connected clients
         clients.forEach((client) => {
           if (client.readyState === WebSocket.OPEN) {

@@ -30,8 +30,10 @@
     socket.onmessage = (event) => {
       const data = JSON.parse(event.data);
       log(`Received message from server: ${JSON.stringify(data)}`);
-      if (data.type === "send_message") {
-        sendMessageToClaude(data.content);
+      if (data.type === "set_input") {
+        setInputInClaude(data.content);
+      } else if (data.type === "submit_input") {
+        submitInputToClaude();
       }
     };
   }
@@ -65,8 +67,8 @@
     return window.location.href;
   }
 
-  function sendMessageToClaude(message) {
-    log("Attempting to send message to Claude...");
+  function setInputInClaude(message) {
+    log("Attempting to set input in Claude...");
 
     const messageInput = document.querySelector(
       '.ProseMirror[contenteditable="true"]'
@@ -84,48 +86,6 @@
       log("Dispatching input event...");
       messageInput.dispatchEvent(new Event("input", { bubbles: true }));
       log("Input event dispatched");
-
-      // Function to find the send button
-      const findSendButton = () => {
-        const sendButton = document.querySelector(
-          'button[aria-label="Send Message"]'
-        );
-        if (sendButton) {
-          log("Send button found");
-          log(`Send button details: ${sendButton.outerHTML}`);
-          return sendButton;
-        }
-        log("Send button not found");
-        return null;
-      };
-
-      // Wait for the send button to appear and become clickable
-      const waitForSendButton = () => {
-        return new Promise((resolve) => {
-          const checkButton = () => {
-            const sendButton = findSendButton();
-            if (sendButton && !sendButton.disabled) {
-              resolve(sendButton);
-            } else {
-              setTimeout(checkButton, 100); // Check every 100ms
-            }
-          };
-          checkButton();
-        });
-      };
-
-      // Use the wait function and then click the button
-      waitForSendButton()
-        .then((sendButton) => {
-          log("Attempting to click send button...");
-          sendButton?.click();
-          log("Send button clicked");
-        })
-        .catch((error) => {
-          log(`Error clicking send button: ${error}`);
-        });
-
-      log(`Attempted to send message to Claude: ${message}`);
     } else {
       log("Failed to find message input");
       log("Current page HTML:");
@@ -133,15 +93,21 @@
     }
   }
 
-  // Function to send a test message
-  // function sendTestMessage() {
-  //   const testMessage =
-  //     "This is a test message sent by the remote control script.";
-  //   sendMessageToClaude(testMessage);
-  // }
+  function submitInputToClaude() {
+    log("Attempting to submit input to Claude...");
 
-  // // Call sendTestMessage() to test the functionality
-  // sendTestMessage();
+    const sendButton = document.querySelector(
+      'button[aria-label="Send Message"]'
+    );
+    if (sendButton && !sendButton.disabled) {
+      log("Send button found and clickable");
+      log(`Send button details: ${sendButton.outerHTML}`);
+      sendButton.click();
+      log("Send button clicked");
+    } else {
+      log("Send button not found or disabled");
+    }
+  }
 
   function monitorClaudeResponse() {
     const chatContainer = document.querySelector(".flex-1.flex.flex-col.gap-3");
