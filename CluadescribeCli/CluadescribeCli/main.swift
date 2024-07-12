@@ -13,7 +13,6 @@ class SpeechRecognizer: NSObject, SFSpeechRecognizerDelegate, WebSocketDelegate 
     private let audioEngine = AVAudioEngine()
     private var socket: WebSocket?
     private var currentTranscription: String = ""
-    private var isCollectingNewTranscription: Bool = true
     
     override init() {
         super.init()
@@ -33,31 +32,22 @@ class SpeechRecognizer: NSObject, SFSpeechRecognizerDelegate, WebSocketDelegate 
     
     func startRecording() throws {
         print("Starting recording process")
-        // Cancel the previous task if it's running.
-        if let task = recognitionTask {
-            print("Cancelling previous recognition task")
-            task.cancel()
+        if let recognitionTask = self.recognitionTask {
+            recognitionTask.cancel()
             self.recognitionTask = nil
         }
         
+//        let audioSession = AVAudioSession.sharedInstance()
+//        try audioSession.setCategory(.record, mode: .measurement, options: .duckOthers)
+//        try audioSession.setActive(true, options: .notifyOthersOnDeactivation)
         let inputNode = audioEngine.inputNode
         
-        // Create and configure the speech recognition request.
         recognitionRequest = SFSpeechAudioBufferRecognitionRequest()
         guard let recognitionRequest = recognitionRequest else {
-            print("Failed to create SFSpeechAudioBufferRecognitionRequest")
             fatalError("Unable to create a SFSpeechAudioBufferRecognitionRequest object")
         }
         recognitionRequest.shouldReportPartialResults = true
         
-        // Keep speech recognition data on device
-//        if #available(macOS 10.15, *) {
-//            recognitionRequest.requiresOnDeviceRecognition = true
-//            print("On-device recognition enabled")
-//        }
-        
-        // Create a recognition task for the speech recognition session.
-        print("Creating recognition task")
         recognitionTask = speechRecognizer.recognitionTask(with: recognitionRequest) { result, error in
             var isFinal = false
             
@@ -65,65 +55,78 @@ class SpeechRecognizer: NSObject, SFSpeechRecognizerDelegate, WebSocketDelegate 
                 let transcription = result.bestTranscription.formattedString
                 print("Transcription received: \(transcription)")
                 
-                if self.isCollectingNewTranscription {
-                    self.currentTranscription = transcription
-                    self.setInputInClaude(transcription)
-                }
+                self.processDoneKeyword(in: transcription)
                 
                 isFinal = result.isFinal
-                
-                if transcription.lowercased().contains("done") {
-                    print("'Done' detected in transcription. Submitting input.")
-                    self.submitInputToClaude()
-                    self.isCollectingNewTranscription = false
-                    // Short delay before starting a new transcription
-                    DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
-                        self.startNewTranscription()
-                    }
-                }
-            }
-            
-            if let error = error {
-                print("Error in recognition task: \(error.localizedDescription)")
             }
             
             if error != nil || isFinal {
-                print("Stopping audio engine and removing tap")
                 self.audioEngine.stop()
                 inputNode.removeTap(onBus: 0)
                 
                 self.recognitionRequest = nil
                 self.recognitionTask = nil
+                
+                // Send any remaining transcription
+                if !self.currentTranscription.isEmpty {
+                    self.sendTranscriptionToClaude(self.currentTranscription)
+                    self.currentTranscription = ""
+                }
+                
+                // Restart recording after a short delay
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                    do {
+                        try self.startRecording()
+                    } catch {
+                        print("Failed to restart recording: \(error)")
+                    }
+                }
             }
         }
         
-        // Configure the microphone input.
-        print("Configuring microphone input")
         let recordingFormat = inputNode.outputFormat(forBus: 0)
         inputNode.installTap(onBus: 0, bufferSize: 1024, format: recordingFormat) { (buffer: AVAudioPCMBuffer, when: AVAudioTime) in
             self.recognitionRequest?.append(buffer)
         }
         
         audioEngine.prepare()
-        print("Starting audio engine")
         try audioEngine.start()
         
         print("Recording started successfully")
     }
     
-    func stopRecording() {
-        print("Stopping recording")
-        audioEngine.stop()
-        recognitionRequest?.endAudio()
+    private func processDoneKeyword(in transcription: String) {
+        let components = transcription.components(separatedBy: "done")
         
-        print("Recording stopped")
+        if components.count > 1 {
+            // There's at least one "done" in the transcription
+            for (index, component) in components.enumerated() {
+                if index == 0 {
+                    // First part (before the first "done")
+                    let fullTranscription = currentTranscription + component
+                    if !fullTranscription.isEmpty {
+                        print("Sending transcription before 'done': \(fullTranscription)")
+                        sendTranscriptionToClaude(fullTranscription)
+                    }
+                } else {
+                    // Subsequent parts (after each "done")
+                    if !component.isEmpty {
+                        print("Sending transcription after 'done': \(component)")
+                        sendTranscriptionToClaude(component)
+                    }
+                }
+            }
+            currentTranscription = ""
+        } else {
+            // No "done" found, update currentTranscription
+            currentTranscription = transcription
+        }
     }
     
-    func startNewTranscription() {
-        print("Starting new transcription")
-        currentTranscription = ""
-        isCollectingNewTranscription = true
-        setInputInClaude("")
+    func stopRecording() {
+        audioEngine.stop()
+        recognitionRequest?.endAudio()
+        print("Recording stopped")
     }
     
     func setInputInClaude(_ transcription: String) {
@@ -144,13 +147,18 @@ class SpeechRecognizer: NSObject, SFSpeechRecognizerDelegate, WebSocketDelegate 
             if let jsonString = String(data: jsonData, encoding: .utf8) {
                 print("Sending message to WebSocket: \(jsonString)")
                 socket?.write(string: jsonString)
-            } else {
-                print("Failed to create JSON string from data")
             }
         } catch {
             print("Error serializing JSON: \(error.localizedDescription)")
         }
     }
+    
+    func sendTranscriptionToClaude(_ transcription: String) {
+        setInputInClaude(transcription)
+        submitInputToClaude()
+    }
+    
+    // MARK: - SFSpeechRecognizerDelegate
     
     func speechRecognizer(_ speechRecognizer: SFSpeechRecognizer, availabilityDidChange available: Bool) {
         if available {
@@ -192,9 +200,6 @@ class SpeechRecognizer: NSObject, SFSpeechRecognizerDelegate, WebSocketDelegate 
 
 // Main execution
 let speechRecognizer = SpeechRecognizer()
-
-//print("Press Enter to start recording. Say 'done' to submit the current transcription and start a new one.")
-//_ = readLine()
 
 do {
     try speechRecognizer.startRecording()
