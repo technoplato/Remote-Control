@@ -23,7 +23,7 @@ const ClaudeStateSchema = z.object({
 const MessageSchema = z.object({
   type: z.literal("message"),
   content: z.string(),
-  messageId: z.string().optional(),
+  messageId: z.string(),
   isUser: z.boolean().optional(),
   timestamp: z.string(),
   url: z.string().url(),
@@ -93,6 +93,7 @@ async function processWebSocketMessage(data: unknown): Promise<void> {
   } catch (error) {
     if (error instanceof z.ZodError) {
       console.error("Validation error:", error.errors);
+      console.error("Received data:", JSON.stringify(data, null, 2));
     } else {
       console.error("Unknown error:", error);
     }
@@ -123,7 +124,7 @@ async function updateLogEntry(payload: Payload): Promise<void> {
   try {
     let logContent = await fs.readFile(logFile, "utf-8");
     const entries = logContent.split("\n\n");
-    const messageId = (payload as any).messageId;
+    const messageId = "messageId" in payload ? payload.messageId : null;
 
     if (messageId) {
       const index = entries.findIndex((entry) =>

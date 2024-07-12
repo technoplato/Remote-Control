@@ -1,4 +1,4 @@
-// Updated Claude Remote Control Client Script
+// Claude Remote Control Client Script with Verbose Logging
 
 (function () {
   "use strict";
@@ -29,6 +29,7 @@
 
     socket.onmessage = (event) => {
       const data = JSON.parse(event.data);
+      log(`Received message from server: ${JSON.stringify(data)}`);
       if (data.type === "send_message") {
         sendMessageToClaude(data.content);
       }
@@ -65,28 +66,82 @@
   }
 
   function sendMessageToClaude(message) {
+    log("Attempting to send message to Claude...");
+
     const messageInput = document.querySelector(
       '.ProseMirror[contenteditable="true"]'
     );
-    const sendButton = document.querySelector(
-      'button[aria-label="Send Message"]'
-    );
+    log(messageInput ? "Message input found" : "Message input not found");
+    if (messageInput) {
+      log(`Message input details: ${messageInput.outerHTML}`);
 
-    if (messageInput && sendButton) {
       // Set the message content
+      log("Setting message content...");
       messageInput.textContent = message;
+      log("Message content set");
 
       // Dispatch an input event to trigger any necessary UI updates
+      log("Dispatching input event...");
       messageInput.dispatchEvent(new Event("input", { bubbles: true }));
+      log("Input event dispatched");
 
-      // Click the send button
-      sendButton.click();
+      // Function to find the send button
+      const findSendButton = () => {
+        const sendButton = document.querySelector(
+          'button[aria-label="Send Message"]'
+        );
+        if (sendButton) {
+          log("Send button found");
+          log(`Send button details: ${sendButton.outerHTML}`);
+          return sendButton;
+        }
+        log("Send button not found");
+        return null;
+      };
 
-      log(`Sent message to Claude: ${message}`);
+      // Wait for the send button to appear and become clickable
+      const waitForSendButton = () => {
+        return new Promise((resolve) => {
+          const checkButton = () => {
+            const sendButton = findSendButton();
+            if (sendButton && !sendButton.disabled) {
+              resolve(sendButton);
+            } else {
+              setTimeout(checkButton, 100); // Check every 100ms
+            }
+          };
+          checkButton();
+        });
+      };
+
+      // Use the wait function and then click the button
+      waitForSendButton()
+        .then((sendButton) => {
+          log("Attempting to click send button...");
+          sendButton?.click();
+          log("Send button clicked");
+        })
+        .catch((error) => {
+          log(`Error clicking send button: ${error}`);
+        });
+
+      log(`Attempted to send message to Claude: ${message}`);
     } else {
-      log("Failed to find message input or send button");
+      log("Failed to find message input");
+      log("Current page HTML:");
+      log(document.body.innerHTML);
     }
   }
+
+  // Function to send a test message
+  function sendTestMessage() {
+    const testMessage =
+      "This is a test message sent by the remote control script.";
+    sendMessageToClaude(testMessage);
+  }
+
+  // Call sendTestMessage() to test the functionality
+  sendTestMessage();
 
   function monitorClaudeResponse() {
     const chatContainer = document.querySelector(".flex-1.flex.flex-col.gap-3");
@@ -219,5 +274,7 @@
   }
 
   initMonitors();
-  log("Updated Claude Remote Control Client Script is now running.");
+  log(
+    "Claude Remote Control Client Script with Verbose Logging is now running."
+  );
 })();
