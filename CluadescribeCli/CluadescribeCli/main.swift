@@ -13,6 +13,7 @@ class SpeechRecognizer: NSObject, SFSpeechRecognizerDelegate, WebSocketDelegate 
     private let audioEngine = AVAudioEngine()
     private var socket: WebSocket?
     private var currentTranscription: String = ""
+    private var isCollectingNewTranscription: Bool = true
     
     override init() {
         super.init()
@@ -50,10 +51,10 @@ class SpeechRecognizer: NSObject, SFSpeechRecognizerDelegate, WebSocketDelegate 
         recognitionRequest.shouldReportPartialResults = true
         
         // Keep speech recognition data on device
-        if #available(macOS 10.15, *) {
+//        if #available(macOS 10.15, *) {
 //            recognitionRequest.requiresOnDeviceRecognition = true
 //            print("On-device recognition enabled")
-        }
+//        }
         
         // Create a recognition task for the speech recognition session.
         print("Creating recognition task")
@@ -63,15 +64,22 @@ class SpeechRecognizer: NSObject, SFSpeechRecognizerDelegate, WebSocketDelegate 
             if let result = result {
                 let transcription = result.bestTranscription.formattedString
                 print("Transcription received: \(transcription)")
-                self.currentTranscription = transcription
-                isFinal = result.isFinal
                 
-                self.setInputInClaude(transcription)
+                if self.isCollectingNewTranscription {
+                    self.currentTranscription = transcription
+                    self.setInputInClaude(transcription)
+                }
+                
+                isFinal = result.isFinal
                 
                 if transcription.lowercased().contains("done") {
                     print("'Done' detected in transcription. Submitting input.")
                     self.submitInputToClaude()
-//                    self.stopRecording()
+                    self.isCollectingNewTranscription = false
+                    // Short delay before starting a new transcription
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
+                        self.startNewTranscription()
+                    }
                 }
             }
             
@@ -109,6 +117,13 @@ class SpeechRecognizer: NSObject, SFSpeechRecognizerDelegate, WebSocketDelegate 
         recognitionRequest?.endAudio()
         
         print("Recording stopped")
+    }
+    
+    func startNewTranscription() {
+        print("Starting new transcription")
+        currentTranscription = ""
+        isCollectingNewTranscription = true
+        setInputInClaude("")
     }
     
     func setInputInClaude(_ transcription: String) {
@@ -178,7 +193,7 @@ class SpeechRecognizer: NSObject, SFSpeechRecognizerDelegate, WebSocketDelegate 
 // Main execution
 let speechRecognizer = SpeechRecognizer()
 
-//print("Press Enter to start recording. Say 'done' to stop and submit the transcription.")
+//print("Press Enter to start recording. Say 'done' to submit the current transcription and start a new one.")
 //_ = readLine()
 
 do {

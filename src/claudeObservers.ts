@@ -104,6 +104,21 @@
       log(`Send button details: ${sendButton.outerHTML}`);
       sendButton.click();
       log("Send button clicked");
+
+      // Clear the input after submission
+      setTimeout(() => {
+        const messageInput = document.querySelector(
+          '.ProseMirror[contenteditable="true"]'
+        );
+        if (messageInput) {
+          log("Clearing input...");
+          messageInput.textContent = "";
+          messageInput.dispatchEvent(new Event("input", { bubbles: true }));
+          log("Input cleared");
+        } else {
+          log("Failed to find message input for clearing");
+        }
+      }, 100); // Short delay to ensure the message is sent before clearing
     } else {
       log("Send button not found or disabled");
     }
