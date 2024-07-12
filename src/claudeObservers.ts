@@ -1,4 +1,4 @@
-// Claude Remote Control Client Script - Fixed
+// Updated Claude Remote Control Client Script
 
 (function () {
   "use strict";
@@ -26,6 +26,13 @@
     socket.onerror = (error) => {
       log(`WebSocket error: ${error}`);
     };
+
+    socket.onmessage = (event) => {
+      const data = JSON.parse(event.data);
+      if (data.type === "send_message") {
+        sendMessageToClaude(data.content);
+      }
+    };
   }
 
   connectWebSocket();
@@ -36,6 +43,48 @@
       socket.send(JSON.stringify(data));
     } else {
       log("WebSocket is not connected");
+    }
+  }
+
+  function getFormattedTimestamp() {
+    const now = new Date();
+    return now.toLocaleString("en-US", {
+      weekday: "long",
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+      hour: "numeric",
+      minute: "numeric",
+      second: "numeric",
+      timeZoneName: "short",
+    });
+  }
+
+  function getCurrentChatUrl() {
+    return window.location.href;
+  }
+
+  function sendMessageToClaude(message) {
+    const messageInput = document.querySelector(
+      '.ProseMirror[contenteditable="true"]'
+    );
+    const sendButton = document.querySelector(
+      'button[aria-label="Send Message"]'
+    );
+
+    if (messageInput && sendButton) {
+      // Set the message content
+      messageInput.textContent = message;
+
+      // Dispatch an input event to trigger any necessary UI updates
+      messageInput.dispatchEvent(new Event("input", { bubbles: true }));
+
+      // Click the send button
+      sendButton.click();
+
+      log(`Sent message to Claude: ${message}`);
+    } else {
+      log("Failed to find message input or send button");
     }
   }
 
@@ -70,6 +119,9 @@
                 sendToServer({
                   type: "claude_state",
                   state: "generating",
+                  messageId: currentMessageId,
+                  timestamp: getFormattedTimestamp(),
+                  url: getCurrentChatUrl(),
                 });
               } else {
                 log(
@@ -78,6 +130,9 @@
                 sendToServer({
                   type: "claude_state",
                   state: "finished",
+                  messageId: currentMessageId,
+                  timestamp: getFormattedTimestamp(),
+                  url: getCurrentChatUrl(),
                 });
                 currentMessageId = null;
               }
@@ -96,6 +151,9 @@
                   sendToServer({
                     type: "message",
                     content: content,
+                    messageId: currentMessageId,
+                    timestamp: getFormattedTimestamp(),
+                    url: getCurrentChatUrl(),
                   });
                   lastContent = content;
                 }
@@ -140,6 +198,9 @@
                 sendToServer({
                   type: "message",
                   content: messageContent.textContent,
+                  isUser: true,
+                  timestamp: getFormattedTimestamp(),
+                  url: getCurrentChatUrl(),
                 });
               }
             }
@@ -158,5 +219,5 @@
   }
 
   initMonitors();
-  log("Claude Remote Control Client Script - Fixed is now running.");
+  log("Updated Claude Remote Control Client Script is now running.");
 })();
