@@ -48,12 +48,12 @@ async def send_to_claude(message):
     except Exception as e:
         logging.error(f"Error sending message to Claude: {e}")
 
-def on_message(self, result, **kwargs):
+def on_message(result):
     global transcript_buffer, is_final
     logging.debug("on_message callback triggered")
     try:
         logging.debug(f"Full Deepgram response: {json.dumps(result, indent=2)}")
-        sentence = result.channel.alternatives[0].transcript
+        sentence = result['channel']['alternatives'][0]['transcript']
         logging.debug(f"Raw sentence from Deepgram: {sentence}")
         if len(sentence) == 0:
             logging.debug("Empty sentence received, returning")
@@ -69,7 +69,7 @@ def on_message(self, result, **kwargs):
         logging.error(f"Error in on_message: {e}")
 
 def on_metadata(self, metadata, **kwargs):
-    logging.debug(f"Received metadata: {json.dumps(metadata, indent=2)}")
+    logging.debug(f"Received metadata: {metadata}")
 
 def on_error(self, error, **kwargs):
     logging.error(f"Deepgram error: {error}")
@@ -115,8 +115,8 @@ def main():
     logging.debug("Deepgram websocket connection created")
 
     # Register event handlers
-    dg_connection.on(LiveTranscriptionEvents.Transcript, on_message)
-    dg_connection.on(LiveTranscriptionEvents.Metadata, on_metadata)
+    dg_connection.on(LiveTranscriptionEvents.Transcript, lambda *args, **kwargs: on_message(args[1]))
+    dg_connection.on(LiveTranscriptionEvents.Metadata, lambda *args, **kwargs: on_metadata(*args, **kwargs)) 
     dg_connection.on(LiveTranscriptionEvents.Error, on_error)
     dg_connection.on(LiveTranscriptionEvents.Close, on_close)
     logging.debug("Event handlers registered")

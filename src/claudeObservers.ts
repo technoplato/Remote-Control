@@ -134,14 +134,14 @@
   }
 
   // Function to send a test message
-  function sendTestMessage() {
-    const testMessage =
-      "This is a test message sent by the remote control script.";
-    sendMessageToClaude(testMessage);
-  }
+  // function sendTestMessage() {
+  //   const testMessage =
+  //     "This is a test message sent by the remote control script.";
+  //   sendMessageToClaude(testMessage);
+  // }
 
-  // Call sendTestMessage() to test the functionality
-  sendTestMessage();
+  // // Call sendTestMessage() to test the functionality
+  // sendTestMessage();
 
   function monitorClaudeResponse() {
     const chatContainer = document.querySelector(".flex-1.flex.flex-col.gap-3");
