@@ -94,7 +94,7 @@ async function processWebSocketMessage(data: unknown): Promise<void> {
       case "send_message":
       case "set_input":
       case "submit_input":
-        console.log(`Received ${payload.type} event`);
+        console.log(`Received ${payload.type} event:`, payload);
         // Send the message to all connected clients
         clients.forEach((client) => {
           if (client.readyState === WebSocket.OPEN) {
@@ -126,6 +126,12 @@ function formatLogEntry(payload: Payload): string {
       break;
     case "send_message":
       content = `Sending to Claude: ${payload.content}\n`;
+      break;
+    case "set_input":
+      content = `Setting input: ${payload.content}\n`;
+      break;
+    case "submit_input":
+      content = `Submitting input\n`;
       break;
   }
 
