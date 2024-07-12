@@ -1,4 +1,4 @@
-// Updated Console-friendly version of the Claude Remote Control Client Script
+// Claude Remote Control Client Script - Fixed
 
 (function () {
   "use strict";
@@ -6,54 +6,105 @@
   const WS_SERVER_URL = "ws://localhost:3000";
   let socket;
 
-  // Connect to WebSocket server
+  function log(message) {
+    console.log(`[Debug] ${message}`);
+  }
+
   function connectWebSocket() {
+    log("Attempting to connect to WebSocket server...");
     socket = new WebSocket(WS_SERVER_URL);
 
     socket.onopen = () => {
-      console.log("Connected to WebSocket server");
+      log("Connected to WebSocket server");
     };
 
     socket.onclose = () => {
-      console.log("Disconnected from WebSocket server");
-      setTimeout(connectWebSocket, 5000); // Attempt to reconnect after 5 seconds
+      log("Disconnected from WebSocket server");
+      setTimeout(connectWebSocket, 5000);
     };
 
     socket.onerror = (error) => {
-      console.error("WebSocket error:", error);
+      log(`WebSocket error: ${error}`);
     };
   }
 
   connectWebSocket();
 
-  // Send data to WebSocket server
   function sendToServer(data) {
     if (socket && socket.readyState === WebSocket.OPEN) {
+      log(`Sending to server: ${JSON.stringify(data)}`);
       socket.send(JSON.stringify(data));
     } else {
-      console.error("WebSocket is not connected");
+      log("WebSocket is not connected");
     }
   }
 
-  // Monitor Claude's response state
-  function monitorClaudeState() {
+  function monitorClaudeResponse() {
     const chatContainer = document.querySelector(".flex-1.flex.flex-col.gap-3");
-    if (!chatContainer) return;
+    if (!chatContainer) {
+      log("Chat container not found");
+      return;
+    }
+    log("Chat container found, setting up observer");
+
+    let currentMessageId = null;
+    let lastContent = "";
 
     const observer = new MutationObserver((mutations) => {
       for (const mutation of mutations) {
         if (mutation.type === "childList") {
           const addedNode = mutation.addedNodes[0];
           if (addedNode && addedNode.querySelector) {
-            const streamingElement = addedNode.querySelector(
-              "[data-is-streaming]"
-            );
-            if (streamingElement) {
+            const responseDiv = addedNode.querySelector("[data-is-streaming]");
+            if (responseDiv) {
+              log("Found Claude response div");
               const isStreaming =
-                streamingElement.getAttribute("data-is-streaming") === "true";
-              sendToServer({
-                type: "claude_state",
-                state: isStreaming ? "generating" : "finished",
+                responseDiv.getAttribute("data-is-streaming") === "true";
+              const messageId = Date.now().toString();
+
+              if (isStreaming) {
+                currentMessageId = messageId;
+                log(
+                  `Claude started generating (MessageID: ${currentMessageId})`
+                );
+                sendToServer({
+                  type: "claude_state",
+                  state: "generating",
+                });
+              } else {
+                log(
+                  `Claude finished generating (MessageID: ${currentMessageId})`
+                );
+                sendToServer({
+                  type: "claude_state",
+                  state: "finished",
+                });
+                currentMessageId = null;
+              }
+
+              const contentObserver = new MutationObserver(() => {
+                const paragraphs = responseDiv.querySelectorAll(
+                  ".whitespace-pre-wrap.break-words"
+                );
+                const content = Array.from(paragraphs)
+                  .map((p) => p.textContent)
+                  .join("\n\n");
+
+                if (content !== lastContent) {
+                  log(`Content updated (MessageID: ${currentMessageId})`);
+                  log(`New content: ${content}`);
+                  sendToServer({
+                    type: "message",
+                    content: content,
+                  });
+                  lastContent = content;
+                }
+              });
+
+              contentObserver.observe(responseDiv, {
+                childList: true,
+                subtree: true,
+                characterData: true,
               });
             }
           }
@@ -62,29 +113,35 @@
     });
 
     observer.observe(chatContainer, { childList: true, subtree: true });
+    log("Observer set up for Claude responses");
   }
 
-  // Monitor and capture messages
-  function monitorMessages() {
+  function monitorUserMessages() {
     const chatContainer = document.querySelector(".flex-1.flex.flex-col.gap-3");
-    if (!chatContainer) return;
+    if (!chatContainer) {
+      log("Chat container not found");
+      return;
+    }
+    log("Chat container found, setting up observer for user messages");
 
     const observer = new MutationObserver((mutations) => {
       for (const mutation of mutations) {
         if (mutation.type === "childList") {
           const addedNode = mutation.addedNodes[0];
           if (addedNode && addedNode.querySelector) {
-            const messageContent = addedNode.querySelector(
-              ".whitespace-pre-wrap.break-words"
-            );
-            if (messageContent) {
-              const isUserMessage =
-                addedNode.querySelector(".font-user-message") !== null;
-              sendToServer({
-                type: "message",
-                content: messageContent.textContent,
-                isUser: isUserMessage,
-              });
+            const userMessageDiv =
+              addedNode.querySelector(".font-user-message");
+            if (userMessageDiv) {
+              const messageContent = userMessageDiv.querySelector(
+                ".whitespace-pre-wrap.break-words"
+              );
+              if (messageContent) {
+                log(`User message detected: ${messageContent.textContent}`);
+                sendToServer({
+                  type: "message",
+                  content: messageContent.textContent,
+                });
+              }
             }
           }
         }
@@ -92,45 +149,14 @@
     });
 
     observer.observe(chatContainer, { childList: true, subtree: true });
+    log("Observer set up for user messages");
   }
 
-  // Monitor and capture artifacts
-  function monitorArtifacts() {
-    const chatContainer = document.querySelector(".flex-1.flex.flex-col.gap-3");
-    if (!chatContainer) return;
-
-    const observer = new MutationObserver((mutations) => {
-      for (const mutation of mutations) {
-        if (mutation.type === "childList") {
-          const addedNode = mutation.addedNodes[0];
-          if (addedNode && addedNode.querySelector) {
-            const artifactElement = addedNode.querySelector(
-              ".font-styrene.relative"
-            );
-            if (artifactElement) {
-              const artifactContent = artifactElement.textContent;
-              sendToServer({
-                type: "artifact",
-                content: artifactContent,
-              });
-            }
-          }
-        }
-      }
-    });
-
-    observer.observe(chatContainer, { childList: true, subtree: true });
-  }
-
-  // Initialize all monitors
   function initMonitors() {
-    monitorClaudeState();
-    monitorMessages();
-    monitorArtifacts();
+    monitorClaudeResponse();
+    monitorUserMessages();
   }
 
-  // Start monitoring immediately
   initMonitors();
-
-  console.log("Updated Claude Remote Control Client Script is now running.");
+  log("Claude Remote Control Client Script - Fixed is now running.");
 })();
