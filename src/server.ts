@@ -98,8 +98,10 @@ async function processWebSocketMessage(data: unknown): Promise<void> {
         // Send the message to all connected clients
         clients.forEach((client) => {
           if (client.readyState === WebSocket.OPEN) {
-            // temporarily disabling for testing how this works
-            // client.send(JSON.stringify(payload));
+            const payload = JSON.stringify(data);
+            console.log(`[would be] Sending payload to client: ${payload}`);
+
+            // client.send(payload);
           }
         });
         break;
