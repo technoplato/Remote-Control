@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Markdown Trello Board</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/marked/2.0.3/marked.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.14.0/Sortable.min.js"></script>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        margin: 0;
+        padding: 20px;
+        display: flex;
+      }
+      #markdown,
+      #board {
+        flex: 1;
+        margin: 0 10px;
+      }
+      #markdown {
+        white-space: pre-wrap;
+        border: 1px solid #ccc;
+        padding: 10px;
+      }
+      .board {
+        display: flex;
+        overflow-x: auto;
+        padding-bottom: 20px;
+      }
+      .list {
+        flex: 0 0 300px;
+        margin: 0 10px;
+        background-color: #e0e0e0;
+        border-radius: 5px;
+        padding: 10px;
+      }
+      .list h2 {
+        margin-top: 0;
+      }
+      .card {
+        background-color: white;
+        border-radius: 3px;
+        padding: 10px;
+        margin-bottom: 10px;
+        cursor: move;
+      }
+      .card-details {
+        margin-top: 10px;
+        padding: 10px;
+        background-color: #f9f9f9;
+        border-radius: 3px;
+      }
+      .card input[type="checkbox"] {
+        margin-right: 5px;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="markdown"></div>
+    <div id="board"></div>
+
+    <script>
+      const markdown = `# Project To-Do List
+
+## High Priority
+
+### User Interface
+- [ ] Build a user interface that works on iOS and macOS for interacting with Claude website
+- [ ] Implement a sliding drawer that follows the text being said (collapsible)
+- [ ] Add visual indicator for ongoing response without showing full text
+- [ ] Create a locally running chat interface
+- [ ] Develop a simple Swift application for better interaction than reading logs
+
+### Core Functionality
+- [ ] Fix bug where messages are receiving binary data
+- [ ] Make the trigger word ("JINX") configurable
+- [ ] More tightly integrate with the Claude interface for a more complete feature set
+- [ ] Implement artifact handling:
+  - [ ] Parse out artifacts from Claude responses
+  - [ ] Enable downloading and local storage of artifacts
+- [ ] Develop methodology for communicating from user's mobile device to server controlling Claude
+- [ ] Implement ability to copy large files to Claude (similar to web interface)
+
+### Speech Recognition
+- [ ] Allow custom dictionaries for speech recognition
+
+## Currently Working On
+- [ ] Changing trigger word from "done" to "JINX"
+- [ ] Debugging message receiving issues
+
+## Next Up
+- [ ] Implement local intent processing (possibly using Llama 7B or Gemma)
+- [ ] Teach Claude how to run commands on local machine and feed back results
+
+## Nice to Have
+- [ ] Integrate with project management tools (milestones, issues, projects)
+- [ ] Implement file change awareness without spamming Claude
+- [ ] Auto-scroll to bottom of input text in web interface
+
+## Bugs
+- [ ] Fix binary data reception in messages
+- [ ] Address speech recognition accuracy (e.g., "GitHub" recognized as "GET HUB", "Compose" as "compostable")
+
+## Ongoing Improvements
+- [ ] Continuously improve speech recognition accuracy
+- [ ] Enhance integration with Claude's capabilities
+- [ ] Optimize performance and user experience
+
+## Future Considerations
+- [ ] Explore advanced NLP models for local processing
+- [ ] Investigate potential for offline functionality
+- [ ] Consider multi-platform support beyond iOS and macOS`;
+
+      document.getElementById("markdown").textContent = markdown;
+
+      function parseMarkdown(md) {
+        const lines = md.split("\n");
+        const board = {};
+        let currentList = null;
+
+        lines.forEach((line) => {
+          if (line.startsWith("## ")) {
+            currentList = line.substring(3).trim();
+            board[currentList] = [];
+          } else if (line.startsWith("- [ ] ") && currentList) {
+            board[currentList].push({
+              text: line.substring(6).trim(),
+              checked: false,
+            });
+          }
+        });
+
+        return board;
+      }
+
+      function renderBoard(board) {
+        const boardElement = document.getElementById("board");
+        boardElement.innerHTML = "";
+
+        Object.entries(board).forEach(([listName, cards]) => {
+          const listElement = document.createElement("div");
+          listElement.className = "list";
+          listElement.innerHTML = `<h2>${listName}</h2>`;
+
+          const cardsContainer = document.createElement("div");
+          cardsContainer.className = "cards";
+
+          cards.forEach((card, index) => {
+            const cardElement = document.createElement("div");
+            cardElement.className = "card";
+            cardElement.innerHTML = `
+                    <input type="checkbox" ${card.checked ? "checked" : ""}>
+                    <span>${card.text}</span>
+                `;
+
+            cardElement
+              .querySelector("input")
+              .addEventListener("change", (e) => {
+                card.checked = e.target.checked;
+                updateMarkdown();
+              });
+
+            cardsContainer.appendChild(cardElement);
+          });
+
+          listElement.appendChild(cardsContainer);
+          boardElement.appendChild(listElement);
+
+          new Sortable(cardsContainer, {
+            group: "shared",
+            animation: 150,
+            onEnd: updateMarkdown,
+          });
+        });
+      }
+
+      function updateMarkdown() {
+        const board = document.getElementById("board");
+        let updatedMarkdown = "# Project To-Do List\n\n";
+
+        board.querySelectorAll(".list").forEach((list) => {
+          updatedMarkdown += `## ${list.querySelector("h2").textContent}\n\n`;
+          list.querySelectorAll(".card").forEach((card) => {
+            const checked = card.querySelector("input").checked;
+            const text = card.querySelector("span").textContent;
+            updatedMarkdown += `- [${checked ? "x" : " "}] ${text}\n`;
+          });
+          updatedMarkdown += "\n";
+        });
+
+        document.getElementById("markdown").textContent = updatedMarkdown;
+      }
+
+      const board = parseMarkdown(markdown);
+      renderBoard(board);
+    </script>
+  </body>
+</html>
