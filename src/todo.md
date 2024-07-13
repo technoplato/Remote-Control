@@ -12,6 +12,7 @@
 
 ### Core Functionality
 
+- [ ] Make it easier to start everything
 - [ ] When server starts up, it should automatically add the monitor script to claude.ai webpages and somehow know which one to do.
 - [ ] Make the trigger word ("JINX") configurable
 - [ ] More tightly integrate with the Claude interface for a more complete feature set
