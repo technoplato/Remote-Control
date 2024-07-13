@@ -103,9 +103,9 @@ class SpeechRecognizer: NSObject, SFSpeechRecognizerDelegate, WebSocketDelegate 
     private func processCurrentTranscriptionSection(_ fullTranscription: String) {
         print("Processing transcription: \(fullTranscription)")
         
-        var currentTranscriptionSection: String
+        let currentTranscriptionSection: String
         if lastCompletedSection.isEmpty {
-            currentTranscriptionSection = String(fullTranscription.dropFirst(currentTranscription.count))
+            currentTranscriptionSection = fullTranscription
         } else {
             if let range = fullTranscription.range(of: lastCompletedSection) {
                 currentTranscriptionSection = String(fullTranscription[range.upperBound...])
