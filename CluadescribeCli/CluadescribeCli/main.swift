@@ -6,6 +6,15 @@ import Starscream
 // MARK: - Constants
 let CLAUDE_WS_URL = "ws://localhost:3000"
 
+// MARK: - Global Logging Control
+var isLoggingEnabled = true
+
+func log(_ message: String) {
+    if isLoggingEnabled {
+        print(message)
+    }
+}
+
 class SpeechRecognizer: NSObject, SFSpeechRecognizerDelegate, WebSocketDelegate {
     private let speechRecognizer = SFSpeechRecognizer(locale: Locale(identifier: "en-US"))!
     private var recognitionRequest: SFSpeechAudioBufferRecognitionRequest?
@@ -23,17 +32,17 @@ class SpeechRecognizer: NSObject, SFSpeechRecognizerDelegate, WebSocketDelegate 
     }
     
     private func setupWebSocket() {
-        print("Setting up WebSocket connection to \(CLAUDE_WS_URL)")
+        log("Setting up WebSocket connection to \(CLAUDE_WS_URL)")
         var request = URLRequest(url: URL(string: CLAUDE_WS_URL)!)
         request.timeoutInterval = 5
         socket = WebSocket(request: request)
         socket?.delegate = self
         socket?.connect()
-        print("WebSocket connection attempt initiated")
+        log("WebSocket connection attempt initiated")
     }
     
     func startRecording() throws {
-        print("Starting recording process")
+        log("Starting recording process")
         if let recognitionTask = self.recognitionTask {
             recognitionTask.cancel()
             self.recognitionTask = nil
@@ -52,14 +61,21 @@ class SpeechRecognizer: NSObject, SFSpeechRecognizerDelegate, WebSocketDelegate 
             
             if let result = result {
                 let transcription = result.bestTranscription.formattedString
-                print("Transcription received: \(transcription)")
+                log("Transcription received: \(transcription)")
+                
+//                // Check for "logging" to toggle logging
+                // Not working and I'm not going to futs about
+//                if transcription.lowercased().contains("logging") {
+//                    isLoggingEnabled.toggle()
+//                    log("Logging " + (isLoggingEnabled ? "enabled" : "disabled"))
+//                }
                 
                 self.processCurrentTranscriptionSection(transcription)
                 
                 // Debug: Split transcription by "done" and print relevant section
                 let sections = transcription.components(separatedBy: "done")
                 if self.completedSectionCount < sections.count {
-                    print("Current section (debug): \(sections[self.completedSectionCount])")
+                    log("Current section (debug): \(sections[self.completedSectionCount])")
                 }
                 
                 isFinal = result.isFinal
@@ -83,7 +99,7 @@ class SpeechRecognizer: NSObject, SFSpeechRecognizerDelegate, WebSocketDelegate 
                     do {
                         try self.startRecording()
                     } catch {
-                        print("Failed to restart recording: \(error)")
+                        log("Failed to restart recording: \(error)")
                     }
                 }
             }
@@ -97,11 +113,11 @@ class SpeechRecognizer: NSObject, SFSpeechRecognizerDelegate, WebSocketDelegate 
         audioEngine.prepare()
         try audioEngine.start()
         
-        print("Recording started successfully")
+        log("Recording started successfully")
     }
     
     private func processCurrentTranscriptionSection(_ fullTranscription: String) {
-        print("Processing transcription: \(fullTranscription)")
+        log("Processing transcription: \(fullTranscription)")
         
         let currentTranscriptionSection: String
         if lastCompletedSection.isEmpty {
@@ -110,19 +126,19 @@ class SpeechRecognizer: NSObject, SFSpeechRecognizerDelegate, WebSocketDelegate 
             if let range = fullTranscription.range(of: lastCompletedSection) {
                 currentTranscriptionSection = String(fullTranscription[range.upperBound...])
             } else {
-                print("Error: Cannot find last completed section in full transcription")
+                log("Error: Cannot find last completed section in full transcription")
                 return
             }
         }
         
-        print("Current transcription section: \(currentTranscriptionSection)")
+        log("Current transcription section: \(currentTranscriptionSection)")
         
         if currentTranscriptionSection.lowercased().contains("done") {
             let components = currentTranscriptionSection.components(separatedBy: "done")
             if !components.isEmpty {
                 let completedSection = components[0].trimmingCharacters(in: .whitespacesAndNewlines)
                 if !completedSection.isEmpty {
-                    print("Sending completed section: \(completedSection)")
+                    log("Sending completed section: \(completedSection)")
                     sendTranscriptionToClaude(completedSection)
                     lastCompletedSection = fullTranscription.components(separatedBy: "done")[0...completedSectionCount].joined(separator: "done") + "done"
                     completedSectionCount += 1
@@ -137,17 +153,17 @@ class SpeechRecognizer: NSObject, SFSpeechRecognizerDelegate, WebSocketDelegate 
     func stopRecording() {
         audioEngine.stop()
         recognitionRequest?.endAudio()
-        print("Recording stopped")
+        log("Recording stopped")
     }
     
     func setInputInClaude(_ transcription: String) {
-        print("Setting input in Claude: \(transcription)")
+        log("Setting input in Claude: \(transcription)")
         let message = ["type": "set_input", "content": transcription]
         sendToWebSocket(message)
     }
     
     func submitInputToClaude() {
-        print("Submitting input to Claude")
+        log("Submitting input to Claude")
         let message = ["type": "submit_input"]
         sendToWebSocket(message)
     }
@@ -156,11 +172,11 @@ class SpeechRecognizer: NSObject, SFSpeechRecognizerDelegate, WebSocketDelegate 
         do {
             let jsonData = try JSONSerialization.data(withJSONObject: message)
             if let jsonString = String(data: jsonData, encoding: .utf8) {
-                print("Sending message to WebSocket: \(jsonString)")
+                log("Sending message to WebSocket: \(jsonString)")
                 socket?.write(string: jsonString)
             }
         } catch {
-            print("Error serializing JSON: \(error.localizedDescription)")
+            log("Error serializing JSON: \(error.localizedDescription)")
         }
     }
     
@@ -173,9 +189,9 @@ class SpeechRecognizer: NSObject, SFSpeechRecognizerDelegate, WebSocketDelegate 
     
     func speechRecognizer(_ speechRecognizer: SFSpeechRecognizer, availabilityDidChange available: Bool) {
         if available {
-            print("Speech recognition became available")
+            log("Speech recognition became available")
         } else {
-            print("Speech recognition became unavailable")
+            log("Speech recognition became unavailable")
         }
     }
     
@@ -184,27 +200,27 @@ class SpeechRecognizer: NSObject, SFSpeechRecognizerDelegate, WebSocketDelegate 
     func didReceive(event: WebSocketEvent, client: WebSocketClient) {
         switch event {
         case .connected(let headers):
-            print("WebSocket connected with headers: \(headers)")
+            log("WebSocket connected with headers: \(headers)")
         case .disconnected(let reason, let code):
-            print("WebSocket disconnected with reason: \(reason), code: \(code)")
+            log("WebSocket disconnected with reason: \(reason), code: \(code)")
         case .text(let string):
-            print("Received text from WebSocket: \(string)")
+            log("Received text from WebSocket: \(string)")
         case .binary(let data):
-            print("Received binary data from WebSocket: \(data.count) bytes")
+            log("Received binary data from WebSocket: \(data.count) bytes")
         case .ping(_):
-            print("Received ping")
+            log("Received ping")
         case .pong(_):
-            print("Received pong")
+            log("Received pong")
         case .viabilityChanged(let isViable):
-            print("WebSocket viability changed: \(isViable)")
+            log("WebSocket viability changed: \(isViable)")
         case .reconnectSuggested(let isSuggested):
-            print("WebSocket reconnect suggested: \(isSuggested)")
+            log("WebSocket reconnect suggested: \(isSuggested)")
         case .cancelled:
-            print("WebSocket cancelled")
+            log("WebSocket cancelled")
         case .error(let error):
-            print("WebSocket error: \(error?.localizedDescription ?? "Unknown error")")
+            log("WebSocket error: \(error?.localizedDescription ?? "Unknown error")")
         case .peerClosed:
-            print("WebSocket peer closed")
+            log("WebSocket peer closed")
         }
     }
 }
@@ -214,8 +230,8 @@ let speechRecognizer = SpeechRecognizer()
 
 do {
     try speechRecognizer.startRecording()
-    print("Entering run loop")
+    log("Entering run loop")
     RunLoop.main.run()
 } catch {
-    print("An error occurred while starting the recording: \(error.localizedDescription)")
+    log("An error occurred while starting the recording: \(error.localizedDescription)")
 }
