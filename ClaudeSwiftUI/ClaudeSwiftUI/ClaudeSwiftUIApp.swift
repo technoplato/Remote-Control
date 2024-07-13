@@ -1,42 +1,87 @@
 import SwiftUI
 import Combine
+import Network
+
+// MARK: - Debugging
+
+func debugLog(_ message: String) {
+    print("DEBUG: \(message)")
+}
 
 // MARK: - WebSocket Connection
 
 class WebSocketManager: ObservableObject {
     private var webSocketTask: URLSessionWebSocketTask?
     @Published var isConnected = false
+    @Published var connectionError: String?
     var messageHandler: ((String) -> Void)?
+    
+    private let monitor = NWPathMonitor()
+    private let monitorQueue = DispatchQueue(label: "WebSocketMonitor")
+
+    init() {
+        setupNetworkMonitoring()
+    }
+
+    private func setupNetworkMonitoring() {
+        monitor.pathUpdateHandler = { [weak self] path in
+            DispatchQueue.main.async {
+                if path.status == .satisfied {
+                    debugLog("Network connection available")
+                    self?.connectionError = nil
+                    self?.connect()
+                } else {
+                    debugLog("No network connection")
+                    self?.connectionError = "No network connection"
+                    self?.disconnect()
+                }
+            }
+        }
+        monitor.start(queue: monitorQueue)
+    }
 
     func connect() {
-        let url = URL(string: "ws://localhost:3000")!
+        guard let url = URL(string: "ws://localhost:3000") else {
+            connectionError = "Invalid URL"
+            return
+        }
+        
+        debugLog("Attempting to connect to WebSocket")
         let request = URLRequest(url: url)
         let session = URLSession(configuration: .default)
         webSocketTask = session.webSocketTask(with: request)
         webSocketTask?.resume()
         isConnected = true
+        connectionError = nil
         receiveMessage()
     }
 
     func disconnect() {
+        debugLog("Disconnecting WebSocket")
         webSocketTask?.cancel(with: .normalClosure, reason: nil)
         isConnected = false
     }
 
     private func receiveMessage() {
-        webSocketTask?.receive { result in
+        webSocketTask?.receive { [weak self] result in
+            guard let self = self else { return }
+            
             switch result {
             case .failure(let error):
-                print("Error receiving message: \(error)")
-                self.isConnected = false
+                DispatchQueue.main.async {
+                    debugLog("WebSocket receive error: \(error.localizedDescription)")
+                    self.connectionError = "Error receiving message: \(error.localizedDescription)"
+                    self.isConnected = false
+                }
             case .success(let message):
                 switch message {
                 case .string(let text):
+                    debugLog("Received WebSocket message: \(text)")
                     DispatchQueue.main.async {
                         self.messageHandler?(text)
                     }
                 @unknown default:
-                    break
+                    debugLog("Received unknown WebSocket message type")
                 }
                 self.receiveMessage()
             }
@@ -44,9 +89,13 @@ class WebSocketManager: ObservableObject {
     }
 
     func send(_ message: String) {
-        webSocketTask?.send(.string(message)) { error in
+        debugLog("Sending WebSocket message: \(message)")
+        webSocketTask?.send(.string(message)) { [weak self] error in
             if let error = error {
-                print("Error sending message: \(error)")
+                debugLog("WebSocket send error: \(error.localizedDescription)")
+                DispatchQueue.main.async {
+                    self?.connectionError = "Error sending message: \(error.localizedDescription)"
+                }
             }
         }
     }
@@ -58,6 +107,7 @@ class ClaudeRemoteControlViewModel: ObservableObject {
     @Published var currentTranscription: String = ""
     @Published var messages: [Message] = []
     @Published var isConnected: Bool = false
+    @Published var connectionError: String?
 
     private var webSocketManager = WebSocketManager()
     private var cancellables = Set<AnyCancellable>()
@@ -73,33 +123,48 @@ class ClaudeRemoteControlViewModel: ObservableObject {
 
         webSocketManager.$isConnected
             .receive(on: DispatchQueue.main)
-            .assign(to: &$isConnected)
+            .sink { [weak self] isConnected in
+                debugLog("WebSocket connection status changed: \(isConnected)")
+                self?.isConnected = isConnected
+            }
+            .store(in: &cancellables)
 
-        // Connect to WebSocket when the app starts
+        webSocketManager.$connectionError
+            .receive(on: DispatchQueue.main)
+            .assign(to: &$connectionError)
+
+        debugLog("Attempting to connect to WebSocket")
         webSocketManager.connect()
     }
 
     private func handleWebSocketMessage(_ message: String) {
+        debugLog("Handling WebSocket message: \(message)")
         guard let data = message.data(using: .utf8),
               let json = try? JSONSerialization.jsonObject(with: data, options: []) as? [String: Any],
               let type = json["type"] as? String else {
-            print("Invalid message format")
+            debugLog("Invalid message format")
             return
         }
 
         switch type {
         case "set_input":
             if let content = json["content"] as? String {
-                self.currentTranscription = content
+                debugLog("Updating current transcription: \(content)")
+                DispatchQueue.main.async {
+                    self.currentTranscription = content
+                }
             }
         case "message":
             if let content = json["content"] as? String,
                let isUser = json["isUser"] as? Bool {
+                debugLog("Adding new message: \(content), isUser: \(isUser)")
                 let newMessage = Message(content: content, isUser: isUser)
-                self.messages.append(newMessage)
+                DispatchQueue.main.async {
+                    self.messages.append(newMessage)
+                }
             }
         default:
-            print("Unknown message type: \(type)")
+            debugLog("Unknown message type: \(type)")
         }
     }
 }
@@ -110,12 +175,6 @@ struct Message: Identifiable {
     let id = UUID()
     let content: String
     let isUser: Bool
-}
-
-struct Artifact: Identifiable {
-    let id = UUID()
-    let content: String
-    // Add more properties as needed for artifacts
 }
 
 // MARK: - Views
@@ -140,7 +199,9 @@ struct ContentView: View {
             .listStyle(SidebarListStyle())
             .frame(minWidth: 300)
 
-            ArtifactView()
+            Text("Artifacts Placeholder")
+                .font(.title)
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
         }
         .navigationTitle("Claude Remote Control")
         .toolbar {
@@ -153,6 +214,12 @@ struct ContentView: View {
                         .foregroundColor(.red)
                 }
             }
+        }
+        .alert(item: Binding<AlertItem?>(
+            get: { viewModel.connectionError.map { AlertItem(message: $0) } },
+            set: { _ in viewModel.connectionError = nil }
+        )) { alertItem in
+            Alert(title: Text("Connection Error"), message: Text(alertItem.message), dismissButton: .default(Text("OK")))
         }
     }
 }
@@ -176,17 +243,9 @@ struct MessageView: View {
     }
 }
 
-struct ArtifactView: View {
-    var body: some View {
-        VStack {
-            Text("Artifacts Placeholder")
-                .font(.title)
-            Text("This area will display artifacts created by Claude")
-                .foregroundColor(.secondary)
-        }
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .background(Color.gray.opacity(0.1))
-    }
+struct AlertItem: Identifiable {
+    let id = UUID()
+    let message: String
 }
 
 // MARK: - App Entry Point
