@@ -147,6 +147,7 @@ class SpeechRecognizer: NSObject, SFSpeechRecognizerDelegate, WebSocketDelegate 
             }
         } else {
             currentTranscription = currentTranscriptionSection.trimmingCharacters(in: .whitespacesAndNewlines)
+            setInputInClaude(currentTranscription)
         }
     }
     

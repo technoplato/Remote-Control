@@ -101,7 +101,7 @@ async function processWebSocketMessage(data: unknown): Promise<void> {
             const payload = JSON.stringify(data);
             console.log(`[would be] Sending payload to client: ${payload}`);
 
-            // client.send(payload);
+            client.send(payload);
           }
         });
         break;
