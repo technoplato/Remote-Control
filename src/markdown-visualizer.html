@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Markdown Trello Board</title>
+    <title>Enhanced Markdown Trello Board</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/marked/2.0.3/marked.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.14.0/Sortable.min.js"></script>
     <style>
@@ -17,6 +17,8 @@
       #board {
         flex: 1;
         margin: 0 10px;
+        max-height: 90vh;
+        overflow-y: auto;
       }
       #markdown {
         white-space: pre-wrap;
@@ -54,6 +56,9 @@
       .card input[type="checkbox"] {
         margin-right: 5px;
       }
+      .subtasks {
+        margin-left: 20px;
+      }
     </style>
   </head>
   <body>
@@ -61,12 +66,15 @@
     <div id="board"></div>
 
     <script>
-      const markdown = `# Project To-Do List
+      let markdown = `# Project To-Do List
 
 ## High Priority
 
 ### User Interface
 - [ ] Build a user interface that works on iOS and macOS for interacting with Claude website
+  - [ ] Design UI mockups
+  - [ ] Implement core functionality
+  - [ ] Test on both platforms
 - [ ] Implement a sliding drawer that follows the text being said (collapsible)
 - [ ] Add visual indicator for ongoing response without showing full text
 - [ ] Create a locally running chat interface
@@ -110,7 +118,10 @@
 ## Future Considerations
 - [ ] Explore advanced NLP models for local processing
 - [ ] Investigate potential for offline functionality
-- [ ] Consider multi-platform support beyond iOS and macOS`;
+- [ ] Consider multi-platform support beyond iOS and macOS
+
+## Low Priority
+- [ ] Clear transcript if key is manually pressed`;
 
       document.getElementById("markdown").textContent = markdown;
 
@@ -118,16 +129,27 @@
         const lines = md.split("\n");
         const board = {};
         let currentList = null;
+        let currentCard = null;
 
         lines.forEach((line) => {
           if (line.startsWith("## ")) {
             currentList = line.substring(3).trim();
             board[currentList] = [];
-          } else if (line.startsWith("- [ ] ") && currentList) {
-            board[currentList].push({
-              text: line.substring(6).trim(),
-              checked: false,
-            });
+            currentCard = null;
+          } else if (line.startsWith("- [ ] ") || line.startsWith("- [x] ")) {
+            const checked = line.startsWith("- [x] ");
+            const text = line.substring(6).trim();
+            currentCard = { text, checked, subtasks: [], details: "" };
+            board[currentList].push(currentCard);
+          } else if (
+            line.startsWith("  - [ ] ") ||
+            (line.startsWith("  - [x] ") && currentCard)
+          ) {
+            const checked = line.startsWith("  - [x] ");
+            const text = line.substring(8).trim();
+            currentCard.subtasks.push({ text, checked });
+          } else if (currentCard && line.trim() !== "") {
+            currentCard.details += line + "\n";
           }
         });
 
@@ -152,7 +174,33 @@
             cardElement.innerHTML = `
                     <input type="checkbox" ${card.checked ? "checked" : ""}>
                     <span>${card.text}</span>
+                    <div class="card-details">
+                        <div class="subtasks"></div>
+                        <div class="markdown-details"></div>
+                    </div>
                 `;
+
+            const subtasksElement = cardElement.querySelector(".subtasks");
+            card.subtasks.forEach((subtask) => {
+              const subtaskElement = document.createElement("div");
+              subtaskElement.innerHTML = `
+                        <input type="checkbox" ${
+                          subtask.checked ? "checked" : ""
+                        }>
+                        <span>${subtask.text}</span>
+                    `;
+              subtaskElement
+                .querySelector("input")
+                .addEventListener("change", (e) => {
+                  subtask.checked = e.target.checked;
+                  updateMarkdown();
+                });
+              subtasksElement.appendChild(subtaskElement);
+            });
+
+            const detailsElement =
+              cardElement.querySelector(".markdown-details");
+            detailsElement.innerHTML = marked(card.details);
 
             cardElement
               .querySelector("input")
@@ -185,15 +233,57 @@
             const checked = card.querySelector("input").checked;
             const text = card.querySelector("span").textContent;
             updatedMarkdown += `- [${checked ? "x" : " "}] ${text}\n`;
+
+            card.querySelectorAll(".subtasks > div").forEach((subtask) => {
+              const subtaskChecked = subtask.querySelector("input").checked;
+              const subtaskText = subtask.querySelector("span").textContent;
+              updatedMarkdown += `  - [${
+                subtaskChecked ? "x" : " "
+              }] ${subtaskText}\n`;
+            });
+
+            const details = card.querySelector(".markdown-details").innerText;
+            if (details.trim()) {
+              updatedMarkdown += details + "\n";
+            }
+
+            updatedMarkdown += "\n";
           });
-          updatedMarkdown += "\n";
         });
 
         document.getElementById("markdown").textContent = updatedMarkdown;
+        saveMarkdownToFile(updatedMarkdown);
+      }
+
+      function saveMarkdownToFile(content) {
+        // In a real implementation, this would use a backend API to save the file
+        console.log("Saving to todo.md:", content);
+      }
+
+      function loadMarkdownFromFile() {
+        // In a real implementation, this would use a backend API to load the file
+        console.log("Loading from todo.md");
+        return markdown; // For now, just return the default markdown
+      }
+
+      // Initial load
+      try {
+        markdown = loadMarkdownFromFile();
+      } catch (error) {
+        console.error("Error loading todo.md:", error);
+        alert("Could not load todo.md. Using default content.");
       }
 
       const board = parseMarkdown(markdown);
       renderBoard(board);
+
+      // Horizontal scrolling
+      document.getElementById("board").addEventListener("wheel", function (e) {
+        if (e.deltaY !== 0) {
+          this.scrollLeft += e.deltaY;
+          e.preventDefault();
+        }
+      });
     </script>
   </body>
 </html>

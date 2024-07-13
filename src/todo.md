@@ -12,7 +12,7 @@
 
 ### Core Functionality
 
-- [ ] Fix bug where messages are receiving binary data
+- [ ] When server starts up, it should automatically add the monitor script to claude.ai webpages and somehow know which one to do.
 - [ ] Make the trigger word ("JINX") configurable
 - [ ] More tightly integrate with the Claude interface for a more complete feature set
 - [ ] Implement artifact handling:
@@ -28,8 +28,8 @@
 
 ## Currently Working On
 
-- [ ] Changing trigger word from "done" to "JINX"
-- [ ] Debugging message receiving issues
+- [x] Changing trigger word from "done" to "JINX"
+- [x] Debugging message receiving issues
 
 ## Next Up
 
@@ -45,16 +45,9 @@
 ## Bugs
 
 - [ ] Fix binary data reception in messages
-- [ ] Address speech recognition accuracy (e.g., "GitHub" recognized as "GET HUB", "Compose" as "compostable")
+- [ ] Address speech recognition accuracy (e.g., "GitHub" recognized as "GET HUB", "Composable" as "compostable")
 
 ## Ongoing Improvements
 
-- [ ] Continuously improve speech recognition accuracy
 - [ ] Enhance integration with Claude's capabilities
 - [ ] Optimize performance and user experience
-
-## Future Considerations
-
-- [ ] Explore advanced NLP models for local processing
-- [ ] Investigate potential for offline functionality
-- [ ] Consider multi-platform support beyond iOS and macOS
