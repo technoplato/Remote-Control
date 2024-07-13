@@ -72,8 +72,8 @@ class SpeechRecognizer: NSObject, SFSpeechRecognizerDelegate, WebSocketDelegate 
                 
                 self.processCurrentTranscriptionSection(transcription)
                 
-                // Debug: Split transcription by "done" and print relevant section
-                let sections = transcription.components(separatedBy: "done")
+                // Debug: Split transcription by "jinx" and print relevant section
+                let sections = transcription.components(separatedBy: "jinx")
                 if self.completedSectionCount < sections.count {
                     log("Current section (debug): \(sections[self.completedSectionCount])")
                 }
@@ -133,16 +133,17 @@ class SpeechRecognizer: NSObject, SFSpeechRecognizerDelegate, WebSocketDelegate 
         
         log("Current transcription section: \(currentTranscriptionSection)")
         
-        if currentTranscriptionSection.lowercased().contains("done") {
-            let components = currentTranscriptionSection.components(separatedBy: "done")
+        // TODO configurable hotwords
+        if currentTranscriptionSection.lowercased().contains("jinx") {
+            let components = currentTranscriptionSection.components(separatedBy: "jinx")
             if !components.isEmpty {
                 let completedSection = components[0].trimmingCharacters(in: .whitespacesAndNewlines)
                 if !completedSection.isEmpty {
                     log("Sending completed section: \(completedSection)")
                     sendTranscriptionToClaude(completedSection)
-                    lastCompletedSection = fullTranscription.components(separatedBy: "done")[0...completedSectionCount].joined(separator: "done") + "done"
+                    lastCompletedSection = fullTranscription.components(separatedBy: "jinx")[0...completedSectionCount].joined(separator: "jinx") + "jinx"
                     completedSectionCount += 1
-                    currentTranscription = components.dropFirst().joined(separator: "done").trimmingCharacters(in: .whitespacesAndNewlines)
+                    currentTranscription = components.dropFirst().joined(separator: "jinx").trimmingCharacters(in: .whitespacesAndNewlines)
                 }
             }
         } else {
