@@ -13,6 +13,8 @@ class SpeechRecognizer: NSObject, SFSpeechRecognizerDelegate, WebSocketDelegate 
     private let audioEngine = AVAudioEngine()
     private var socket: WebSocket?
     private var currentTranscription: String = ""
+    private var lastCompletedSection: String = ""
+    private var completedSectionCount: Int = 0
     
     override init() {
         super.init()
@@ -37,9 +39,6 @@ class SpeechRecognizer: NSObject, SFSpeechRecognizerDelegate, WebSocketDelegate 
             self.recognitionTask = nil
         }
         
-//        let audioSession = AVAudioSession.sharedInstance()
-//        try audioSession.setCategory(.record, mode: .measurement, options: .duckOthers)
-//        try audioSession.setActive(true, options: .notifyOthersOnDeactivation)
         let inputNode = audioEngine.inputNode
         
         recognitionRequest = SFSpeechAudioBufferRecognitionRequest()
@@ -55,7 +54,13 @@ class SpeechRecognizer: NSObject, SFSpeechRecognizerDelegate, WebSocketDelegate 
                 let transcription = result.bestTranscription.formattedString
                 print("Transcription received: \(transcription)")
                 
-                self.processDoneKeyword(in: transcription)
+                self.processCurrentTranscriptionSection(transcription)
+                
+                // Debug: Split transcription by "done" and print relevant section
+                let sections = transcription.components(separatedBy: "done")
+                if self.completedSectionCount < sections.count {
+                    print("Current section (debug): \(sections[self.completedSectionCount])")
+                }
                 
                 isFinal = result.isFinal
             }
@@ -95,31 +100,37 @@ class SpeechRecognizer: NSObject, SFSpeechRecognizerDelegate, WebSocketDelegate 
         print("Recording started successfully")
     }
     
-    private func processDoneKeyword(in transcription: String) {
-        let components = transcription.components(separatedBy: "done")
+    private func processCurrentTranscriptionSection(_ fullTranscription: String) {
+        print("Processing transcription: \(fullTranscription)")
         
-        if components.count > 1 {
-            // There's at least one "done" in the transcription
-            for (index, component) in components.enumerated() {
-                if index == 0 {
-                    // First part (before the first "done")
-                    let fullTranscription = currentTranscription + component
-                    if !fullTranscription.isEmpty {
-                        print("Sending transcription before 'done': \(fullTranscription)")
-                        sendTranscriptionToClaude(fullTranscription)
-                    }
-                } else {
-                    // Subsequent parts (after each "done")
-                    if !component.isEmpty {
-                        print("Sending transcription after 'done': \(component)")
-                        sendTranscriptionToClaude(component)
-                    }
+        var currentTranscriptionSection: String
+        if lastCompletedSection.isEmpty {
+            currentTranscriptionSection = String(fullTranscription.dropFirst(currentTranscription.count))
+        } else {
+            if let range = fullTranscription.range(of: lastCompletedSection) {
+                currentTranscriptionSection = String(fullTranscription[range.upperBound...])
+            } else {
+                print("Error: Cannot find last completed section in full transcription")
+                return
+            }
+        }
+        
+        print("Current transcription section: \(currentTranscriptionSection)")
+        
+        if currentTranscriptionSection.lowercased().contains("done") {
+            let components = currentTranscriptionSection.components(separatedBy: "done")
+            if !components.isEmpty {
+                let completedSection = components[0].trimmingCharacters(in: .whitespacesAndNewlines)
+                if !completedSection.isEmpty {
+                    print("Sending completed section: \(completedSection)")
+                    sendTranscriptionToClaude(completedSection)
+                    lastCompletedSection = fullTranscription.components(separatedBy: "done")[0...completedSectionCount].joined(separator: "done") + "done"
+                    completedSectionCount += 1
+                    currentTranscription = components.dropFirst().joined(separator: "done").trimmingCharacters(in: .whitespacesAndNewlines)
                 }
             }
-            currentTranscription = ""
         } else {
-            // No "done" found, update currentTranscription
-            currentTranscription = transcription
+            currentTranscription = currentTranscriptionSection.trimmingCharacters(in: .whitespacesAndNewlines)
         }
     }
     
