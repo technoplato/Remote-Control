@@ -6,6 +6,47 @@
   const WS_SERVER_URL = "ws://localhost:3000";
   let socket;
 
+  /**
+   * Message types for Claude Remote Control system
+   */
+  const CLAUDE_MESSAGE_TYPES = {
+    /**
+     * Sent when Claude starts or stops generating a response
+     * Triggered by: Claude beginning to type or finishing a response
+     */
+    CLAUDE_STATE_CHANGE: "CLAUDE.STATE_CHANGE",
+
+    /**
+     * Sent when a part of Claude's response is received
+     * Triggered by: Claude generating part of a response
+     */
+    CLAUDE_RESPONSE_PART_RECEIVED: "CLAUDE.RESPONSE_PART_RECEIVED",
+
+    /**
+     * Sent when a complete message from Claude is received
+     * Triggered by: Claude finishing a complete response
+     */
+    CLAUDE_RESPONSE_COMPLETE: "CLAUDE.RESPONSE_COMPLETE",
+
+    /**
+     * Sent when a user message is to be sent to Claude
+     * Triggered by: User submitting a message in the UI
+     */
+    CLAUDE_SEND_USER_MESSAGE: "CLAUDE.SEND_USER_MESSAGE",
+
+    /**
+     * Sent when setting the current input in the Claude interface
+     * Triggered by: Real-time speech transcription updates
+     */
+    CLAUDE_SET_CURRENT_INPUT: "CLAUDE.SET_CURRENT_INPUT",
+
+    /**
+     * Sent when submitting the current input to Claude
+     * Triggered by: User finalizing their input (e.g., after speech recognition is complete)
+     */
+    CLAUDE_SUBMIT_CURRENT_INPUT: "CLAUDE.SUBMIT_CURRENT_INPUT",
+  };
+
   function log(message) {
     console.log(`[Debug] ${message}`);
   }
@@ -30,9 +71,11 @@
     socket.onmessage = (event) => {
       const data = JSON.parse(event.data);
       log(`Received message from server: ${JSON.stringify(data)}`);
-      if (data.type === "set_input") {
+      if (data.type === CLAUDE_MESSAGE_TYPES.CLAUDE_SET_CURRENT_INPUT) {
         setInputInClaude(data.content);
-      } else if (data.type === "submit_input") {
+      } else if (
+        data.type === CLAUDE_MESSAGE_TYPES.CLAUDE_SUBMIT_CURRENT_INPUT
+      ) {
         submitInputToClaude();
       }
     };
@@ -153,7 +196,7 @@
                   `Claude started generating (MessageID: ${currentMessageId})`
                 );
                 sendToServer({
-                  type: "claude_state",
+                  type: CLAUDE_MESSAGE_TYPES.CLAUDE_STATE_CHANGE,
                   state: "generating",
                   messageId: currentMessageId,
                   timestamp: getFormattedTimestamp(),
@@ -164,7 +207,7 @@
                   `Claude finished generating (MessageID: ${currentMessageId})`
                 );
                 sendToServer({
-                  type: "claude_state",
+                  type: CLAUDE_MESSAGE_TYPES.CLAUDE_STATE_CHANGE,
                   state: "finished",
                   messageId: currentMessageId,
                   timestamp: getFormattedTimestamp(),
@@ -185,7 +228,7 @@
                   log(`Content updated (MessageID: ${currentMessageId})`);
                   log(`New content: ${content}`);
                   sendToServer({
-                    type: "message",
+                    type: CLAUDE_MESSAGE_TYPES.CLAUDE_RESPONSE_PART_RECEIVED,
                     content: content,
                     messageId: currentMessageId,
                     timestamp: getFormattedTimestamp(),
@@ -232,7 +275,7 @@
               if (messageContent) {
                 log(`User message detected: ${messageContent.textContent}`);
                 sendToServer({
-                  type: "message",
+                  type: CLAUDE_MESSAGE_TYPES.CLAUDE_SEND_USER_MESSAGE,
                   content: messageContent.textContent,
                   isUser: true,
                   timestamp: getFormattedTimestamp(),

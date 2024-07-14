@@ -22,6 +22,10 @@ import Network
  This file contains the entire application, including networking, view models, and UI components.
  */
 
+    static let CLAUDE_RESPONSE_PART_RECEIVED = "CLAUDE.RESPONSE_PART_RECEIVED"
+    static let CLAUDE_RESPONSE_COMPLETE = "CLAUDE.RESPONSE_COMPLETE"
+    static let CLAUDE_SEND_USER_MESSAGE = "CLAUDE.SEND_USER_MESSAGE"
+    static let CLAUDE_SET_CURRENT_INPUT = "CLAUDE.SET_CURRENT_INPUT"
 // MARK: - Debugging
 
 /// Utility function for logging debug messages
@@ -211,7 +215,9 @@ class ClaudeViewModel: ObservableObject {
                     self.currentTranscription = content
                 }
             case "message":
-                print(json)
+            case CLAUDE_MESSAGE_TYPES.CLAUDE_RESPONSE_PART_RECEIVED,
+                 CLAUDE_MESSAGE_TYPES.CLAUDE_RESPONSE_COMPLETE,
+                 CLAUDE_MESSAGE_TYPES.CLAUDE_SEND_USER_MESSAGE:
                 if let content = json["content"] as? String,
                    let isUser = json["isUser"] as? Bool {
                     debugLog("Adding new message: \(content), isUser: \(isUser)")
@@ -222,7 +228,7 @@ class ClaudeViewModel: ObservableObject {
                         self.isClaudeTyping = false
                     }
                 }
-            case "claude_state":
+            case CLAUDE_MESSAGE_TYPES.CLAUDE_STATE_CHANGE:
                 if let state = json["state"] as? String {
                     self.isClaudeTyping = (state == "generating")
                 }
@@ -233,7 +239,10 @@ class ClaudeViewModel: ObservableObject {
     }
     
     func sendMessage(_ content: String) {
-        let message = ["type": "send_message", "content": content]
+        let message = [
+            "type": CLAUDE_MESSAGE_TYPES.CLAUDE_SEND_USER_MESSAGE,
+            "content": content
+        ]
         if let jsonData = try? JSONSerialization.data(withJSONObject: message),
            let jsonString = String(data: jsonData, encoding: .utf8) {
             webSocketManager.send(jsonString)
@@ -558,10 +567,6 @@ private let itemFormatter: DateFormatter = {
 
 // MARK: - App
 
-/**
- The main entry point for the Claude Remote Control macOS application.
- It sets up the app structure and presents the ContentView as the root view.
- */
 @main
 struct ClaudeRemoteControlApp: App {
     var body: some Scene {

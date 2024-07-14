@@ -15,6 +15,45 @@ func log(_ message: String) {
     }
 }
 
+// MARK: - Claude Message Types
+struct CLAUDE_MESSAGE_TYPES {
+    /**
+     * Sent when Claude starts or stops generating a response
+     * Triggered by: Claude beginning to type or finishing a response
+     */
+    static let CLAUDE_STATE_CHANGE = "CLAUDE.STATE_CHANGE"
+    
+    /**
+     * Sent when a part of Claude's response is received
+     * Triggered by: Claude generating part of a response
+     */
+    static let CLAUDE_RESPONSE_PART_RECEIVED = "CLAUDE.RESPONSE_PART_RECEIVED"
+    
+    /**
+     * Sent when a complete message from Claude is received
+     * Triggered by: Claude finishing a complete response
+     */
+    static let CLAUDE_RESPONSE_COMPLETE = "CLAUDE.RESPONSE_COMPLETE"
+    
+    /**
+     * Sent when a user message is to be sent to Claude
+     * Triggered by: User submitting a message in the UI
+     */
+    static let CLAUDE_SEND_USER_MESSAGE = "CLAUDE.SEND_USER_MESSAGE"
+    
+    /**
+     * Sent when setting the current input in the Claude interface
+     * Triggered by: Real-time speech transcription updates
+     */
+    static let CLAUDE_SET_CURRENT_INPUT = "CLAUDE.SET_CURRENT_INPUT"
+    
+    /**
+     * Sent when submitting the current input to Claude
+     * Triggered by: User finalizing their input (e.g., after speech recognition is complete)
+     */
+    static let CLAUDE_SUBMIT_CURRENT_INPUT = "CLAUDE.SUBMIT_CURRENT_INPUT"
+}
+
 class SpeechRecognizer: NSObject, SFSpeechRecognizerDelegate, WebSocketDelegate {
     private let speechRecognizer = SFSpeechRecognizer(locale: Locale(identifier: "en-US"))!
     private var recognitionRequest: SFSpeechAudioBufferRecognitionRequest?
@@ -166,13 +205,13 @@ class SpeechRecognizer: NSObject, SFSpeechRecognizerDelegate, WebSocketDelegate 
     
     func setInputInClaude(_ transcription: String) {
         log("Setting input in Claude: \(transcription)")
-        let message = ["type": "set_input", "content": transcription]
+        let message = ["type": CLAUDE_MESSAGE_TYPES.CLAUDE_SET_CURRENT_INPUT, "content": transcription]
         sendToWebSocket(message)
     }
     
     func submitInputToClaude() {
         log("Submitting input to Claude")
-        let message = ["type": "submit_input"]
+        let message = ["type": CLAUDE_MESSAGE_TYPES.CLAUDE_SUBMIT_CURRENT_INPUT]
         sendToWebSocket(message)
     }
     
