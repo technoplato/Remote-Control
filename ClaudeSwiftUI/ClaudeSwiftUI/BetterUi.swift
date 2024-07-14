@@ -144,6 +144,7 @@ class ClaudeViewModel: ObservableObject {
     @Published var selectedArtifact: Artifact?
     @Published var copiedContents: [CopiedContent] = []
     @Published var showChatControls: Bool = false
+    @Published var isClaudeTyping: Bool = false
     
     private var webSocketManager = WebSocketManager()
     private var cancellables = Set<AnyCancellable>()
@@ -209,6 +210,13 @@ class ClaudeViewModel: ObservableObject {
                     debugLog("Adding new message: \(content), isUser: \(isUser)")
                     let newMessage = Message(content: content, isUser: isUser)
                     self.messages.append(newMessage)
+                    if !isUser {
+                        self.isClaudeTyping = false
+                    }
+                }
+            case "claude_state":
+                if let state = json["state"] as? String {
+                    self.isClaudeTyping = (state == "typing")
                 }
             default:
                 debugLog("Unknown message type: \(type)")
@@ -221,6 +229,8 @@ class ClaudeViewModel: ObservableObject {
         if let jsonData = try? JSONSerialization.data(withJSONObject: message),
            let jsonString = String(data: jsonData, encoding: .utf8) {
             webSocketManager.send(jsonString)
+            self.messages.append(Message(content: content, isUser: true))
+            self.isClaudeTyping = true
         }
     }
     
@@ -271,6 +281,7 @@ struct AlertItem: Identifiable {
 struct ContentView: View {
     @StateObject private var viewModel = ClaudeViewModel()
     @State private var inputText: String = ""
+    @State private var showingArtifactPane: Bool = true
     
     var body: some View {
         NavigationView {
@@ -281,7 +292,7 @@ struct ContentView: View {
                 }
                 .frame(minWidth: 300)
                 
-                if viewModel.showArtifacts {
+                if showingArtifactPane {
                     artifactView
                         .frame(minWidth: 250, idealWidth: 300, maxWidth: 400)
                 }
@@ -289,12 +300,12 @@ struct ContentView: View {
             .navigationTitle("Claude Remote Control")
             .toolbar {
                 ToolbarItem(placement: .automatic) {
-                    Button(action: viewModel.toggleChatControls) {
+                    Button(action: { viewModel.showChatControls.toggle() }) {
                         Image(systemName: "ellipsis.circle")
                     }
                 }
                 ToolbarItem(placement: .automatic) {
-                    Button(action: viewModel.toggleArtifacts) {
+                    Button(action: { showingArtifactPane.toggle() }) {
                         Image(systemName: "sidebar.right")
                     }
                 }
@@ -323,14 +334,25 @@ struct ContentView: View {
     var chatView: some View {
         ScrollView {
             LazyVStack(alignment: .leading, spacing: 10) {
-                Text(viewModel.currentTranscription)
-                    .foregroundColor(.blue)
-                    .padding()
-                    .background(Color(.textBackgroundColor))
-                    .cornerRadius(10)
+                if !viewModel.currentTranscription.isEmpty {
+                    Text(viewModel.currentTranscription)
+                        .foregroundColor(.blue)
+                        .padding()
+                        .background(Color(.textBackgroundColor))
+                        .cornerRadius(10)
+                }
                 
                 ForEach(viewModel.messages) { message in
                     MessageView(message: message)
+                }
+                
+                if viewModel.isClaudeTyping {
+                    HStack {
+                        Text("Claude is typing...")
+                            .foregroundColor(.secondary)
+                        ProgressView()
+                    }
+                    .padding()
                 }
             }
             .padding()
@@ -346,7 +368,18 @@ struct ContentView: View {
                 .cornerRadius(8)
             
             HStack {
+                Button(action: {
+                    let pasteboard = NSPasteboard.general
+                    if let string = pasteboard.string(forType: .string) {
+                        inputText += string
+                    }
+                }) {
+                    Image(systemName: "doc.on.clipboard")
+                }
+                .buttonStyle(BorderlessButtonStyle())
+                
                 Spacer()
+                
                 Button(action: {
                     viewModel.sendMessage(inputText)
                     inputText = ""
@@ -373,17 +406,23 @@ struct ContentView: View {
                     .font(.headline)
                     .padding()
                 
-                List(viewModel.artifacts) { artifact in
-                    Button(action: { viewModel.selectedArtifact = artifact }) {
-                        HStack {
-                            Image(systemName: "doc.text")
-                            VStack(alignment: .leading) {
-                                Text(artifact.title)
-                                Text("\(artifact.versions.count) versions")
-                                    .font(.caption)
-                                    .foregroundColor(.secondary)
+                if viewModel.artifacts.isEmpty {
+                    Text("No artifacts available")
+                        .foregroundColor(.secondary)
+                } else {
+                    List(viewModel.artifacts) { artifact in
+                        Button(action: { viewModel.selectedArtifact = artifact }) {
+                            HStack {
+                                Image(systemName: "doc.text")
+                                VStack(alignment: .leading) {
+                                    Text(artifact.title)
+                                    Text("\(artifact.versions.count) versions")
+                                        .font(.caption)
+                                        .foregroundColor(.secondary)
+                                }
                             }
                         }
+                        .buttonStyle(PlainButtonStyle())
                     }
                     .buttonStyle(PlainButtonStyle())
                 }

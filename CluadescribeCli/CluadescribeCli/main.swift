@@ -133,6 +133,12 @@ class SpeechRecognizer: NSObject, SFSpeechRecognizerDelegate, WebSocketDelegate 
         
         log("Current transcription section: \(currentTranscriptionSection)")
         
+//        if currentTranscriptionSection.lowercased().contains("reset") {
+//            currentTranscription = ""
+//            setInputInClaude(currentTranscription)
+//            return
+//        }
+
         // TODO configurable hotwords
         if currentTranscriptionSection.lowercased().contains("jinx") {
             let components = currentTranscriptionSection.components(separatedBy: "jinx")

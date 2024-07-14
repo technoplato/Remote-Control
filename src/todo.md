@@ -62,6 +62,9 @@
 - [ ] Implement file change awareness without spamming Claude
 - [ ] Implement local intent processing (possibly using Llama 7B or Gemma)
 - [ ] Teach Claude how to run commands on local machine and feed back results
+- [ ] Allow editing messages
+- [ ] Ability to reset transcription
+- [ ] Not have to accept microphone permission each time I run transcription via xcode
 
 ## Bugs
 
