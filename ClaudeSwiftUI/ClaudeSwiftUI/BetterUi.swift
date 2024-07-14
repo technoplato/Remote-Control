@@ -22,10 +22,16 @@ import Network
  This file contains the entire application, including networking, view models, and UI components.
  */
 
+struct CLAUDE_MESSAGE_TYPES {
+    static let CLAUDE_STATE_CHANGE = "CLAUDE.STATE_CHANGE"
     static let CLAUDE_RESPONSE_PART_RECEIVED = "CLAUDE.RESPONSE_PART_RECEIVED"
     static let CLAUDE_RESPONSE_COMPLETE = "CLAUDE.RESPONSE_COMPLETE"
     static let CLAUDE_SEND_USER_MESSAGE = "CLAUDE.SEND_USER_MESSAGE"
     static let CLAUDE_SET_CURRENT_INPUT = "CLAUDE.SET_CURRENT_INPUT"
+    static let CLAUDE_SUBMIT_CURRENT_INPUT = "CLAUDE.SUBMIT_CURRENT_INPUT"
+}
+
+
 // MARK: - Debugging
 
 /// Utility function for logging debug messages
@@ -209,12 +215,11 @@ class ClaudeViewModel: ObservableObject {
         
         DispatchQueue.main.async {
             switch type {
-            case "set_input":
+            case CLAUDE_MESSAGE_TYPES.CLAUDE_SET_CURRENT_INPUT:
                 if let content = json["content"] as? String {
                     debugLog("Updating current transcription: \(content)")
                     self.currentTranscription = content
                 }
-            case "message":
             case CLAUDE_MESSAGE_TYPES.CLAUDE_RESPONSE_PART_RECEIVED,
                  CLAUDE_MESSAGE_TYPES.CLAUDE_RESPONSE_COMPLETE,
                  CLAUDE_MESSAGE_TYPES.CLAUDE_SEND_USER_MESSAGE:
@@ -222,9 +227,8 @@ class ClaudeViewModel: ObservableObject {
                    let isUser = json["isUser"] as? Bool {
                     debugLog("Adding new message: \(content), isUser: \(isUser)")
                     let newMessage = Message(content: content, isUser: isUser)
-                    print(newMessage)
                     self.messages.append(newMessage)
-                    if !isUser {
+                    if !isUser && type == CLAUDE_MESSAGE_TYPES.CLAUDE_RESPONSE_COMPLETE {
                         self.isClaudeTyping = false
                     }
                 }
