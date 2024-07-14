@@ -26,6 +26,7 @@
 ### Core Functionality
 
 - [ ] Make it easier to start everything
+  - [ ] Including automatically embedding the observer javascript into the browser / page
 - [ ] When server starts up, it should automatically add the monitor script to claude.ai webpages and somehow know which one to do.
 - [ ] Make the trigger word ("JINX") configurable
 - [ ] More tightly integrate with the Claude interface for a more complete feature set
@@ -68,5 +69,6 @@
 
 ## Bugs
 
-- [ ] Fix binary data reception in messages
+- [ ] Fix binary data reception in messages.txt
 - [ ] Address speech recognition accuracy (e.g., "GitHub" recognized as "GET HUB", "Composable" as "compostable")
+- [ ] SwiftUI client doesn't reconnect to websocket if server restarts

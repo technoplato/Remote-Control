@@ -188,6 +188,12 @@ class ClaudeViewModel: ObservableObject {
         ]
     }
     
+    
+    
+    
+    
+    
+    
     private func handleWebSocketMessage(_ message: String) {
         debugLog("Handling WebSocket message: \(message)")
         guard let data = message.data(using: .utf8),
@@ -216,7 +222,7 @@ class ClaudeViewModel: ObservableObject {
                 }
             case "claude_state":
                 if let state = json["state"] as? String {
-                    self.isClaudeTyping = (state == "typing")
+                    self.isClaudeTyping = (state == "generating")
                 }
             default:
                 debugLog("Unknown message type: \(type)")

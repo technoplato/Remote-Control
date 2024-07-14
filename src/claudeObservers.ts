@@ -128,7 +128,7 @@
     const chatContainer = document.querySelector(".flex-1.flex.flex-col.gap-3");
     if (!chatContainer) {
       log("Chat container not found");
-      return;
+      throw new Error("Chat container not found, cant do anything");
     }
     log("Chat container found, setting up observer");
 

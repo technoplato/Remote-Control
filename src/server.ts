@@ -84,13 +84,7 @@ async function processWebSocketMessage(data: unknown): Promise<void> {
 
     switch (payload.type) {
       case "claude_state":
-        console.log("Claude state:", payload.state);
-        await updateLogEntry(payload);
-        break;
       case "message":
-        console.log("New message:", payload.content);
-        await updateLogEntry(payload);
-        break;
       case "send_message":
       case "set_input":
       case "submit_input":
@@ -104,6 +98,7 @@ async function processWebSocketMessage(data: unknown): Promise<void> {
             client.send(payload);
           }
         });
+        await updateLogEntry(payload);
         break;
     }
   } catch (error) {
@@ -142,6 +137,7 @@ function formatLogEntry(payload: Payload): string {
 }
 
 async function updateLogEntry(payload: Payload): Promise<void> {
+  return;
   const logFile = path.join(__dirname, "messages.txt");
   try {
     let logContent = await fs.readFile(logFile, "utf-8");
