@@ -47,10 +47,10 @@ func debugLog(_ message: String) {
  It manages connection states, sends and receives messages, and notifies the application of any connection changes.
  */
 class WebSocketManager: ObservableObject {
-    private var webSocketTask: URLSessionWebSocketTask?
+    private var webSocketTasks: [String: URLSessionWebSocketTask] = [:]
     @Published var isConnected = false
     @Published var connectionError: String?
-    var messageHandler: ((String) -> Void)?
+    var messageHandler: ((String, String) -> Void)?
     
     private let monitor = NWPathMonitor()
     private let monitorQueue = DispatchQueue(label: "WebSocketMonitor")
@@ -76,59 +76,63 @@ class WebSocketManager: ObservableObject {
         monitor.start(queue: monitorQueue)
     }
     
-    func connect() {
+    func connect(identifier: String = "default") {
         guard let url = URL(string: "ws://localhost:3000") else {
             connectionError = "Invalid URL"
             return
         }
         
-        debugLog("Attempting to connect to WebSocket")
+        debugLog("Attempting to connect to WebSocket with identifier: \(identifier)")
         let request = URLRequest(url: url)
         let session = URLSession(configuration: .default)
-        webSocketTask = session.webSocketTask(with: request)
-        webSocketTask?.resume()
+        let webSocketTask = session.webSocketTask(with: request)
+        webSocketTasks[identifier] = webSocketTask
+        webSocketTask.resume()
         isConnected = true
         connectionError = nil
-        receiveMessage()
+        receiveMessage(for: identifier)
     }
     
-    func disconnect() {
-        debugLog("Disconnecting WebSocket")
-        webSocketTask?.cancel(with: .normalClosure, reason: nil)
-        isConnected = false
+    func disconnect(identifier: String = "default") {
+        debugLog("Disconnecting WebSocket with identifier: \(identifier)")
+        webSocketTasks[identifier]?.cancel(with: .normalClosure, reason: nil)
+        webSocketTasks.removeValue(forKey: identifier)
+        if webSocketTasks.isEmpty {
+            isConnected = false
+        }
     }
     
-    private func receiveMessage() {
-        webSocketTask?.receive { [weak self] result in
+    private func receiveMessage(for identifier: String) {
+        webSocketTasks[identifier]?.receive { [weak self] result in
             guard let self = self else { return }
             
             switch result {
             case .failure(let error):
                 DispatchQueue.main.async {
-                    debugLog("WebSocket receive error: \(error.localizedDescription)")
+                    debugLog("WebSocket receive error for \(identifier): \(error.localizedDescription)")
                     self.connectionError = "Error receiving message: \(error.localizedDescription)"
                     self.isConnected = false
                 }
             case .success(let message):
                 switch message {
                 case .string(let text):
-                    debugLog("Received WebSocket message: \(text)")
+                    debugLog("Received WebSocket message for \(identifier): \(text)")
                     DispatchQueue.main.async {
-                        self.messageHandler?(text)
+                        self.messageHandler?(identifier, text)
                     }
                 @unknown default:
-                    debugLog("Received unknown WebSocket message type")
+                    debugLog("Received unknown WebSocket message type for \(identifier)")
                 }
-                self.receiveMessage()
+                self.receiveMessage(for: identifier)
             }
         }
     }
     
-    func send(_ message: String) {
-        debugLog("Sending WebSocket message: \(message)")
-        webSocketTask?.send(.string(message)) { [weak self] error in
+    func send(_ message: String, to identifier: String = "default") {
+        debugLog("Sending WebSocket message to \(identifier): \(message)")
+        webSocketTasks[identifier]?.send(.string(message)) { [weak self] error in
             if let error = error {
-                debugLog("WebSocket send error: \(error.localizedDescription)")
+                debugLog("WebSocket send error for \(identifier): \(error.localizedDescription)")
                 DispatchQueue.main.async {
                     self?.connectionError = "Error sending message: \(error.localizedDescription)"
                 }
@@ -165,8 +169,8 @@ class ClaudeViewModel: ObservableObject {
     }
     
     private func setupWebSocket() {
-        webSocketManager.messageHandler = { [weak self] message in
-            self?.handleWebSocketMessage(message)
+        webSocketManager.messageHandler = { [weak self] identifier, message in
+            self?.handleWebSocketMessage(identifier: identifier, message: message)
         }
         
         webSocketManager.$isConnected
@@ -182,7 +186,7 @@ class ClaudeViewModel: ObservableObject {
             .assign(to: &$connectionError)
         
         debugLog("Attempting to connect to WebSocket")
-        webSocketManager.connect()
+        webSocketManager.connect(identifier: "main")
     }
     
     private func setupSampleData() {
@@ -198,49 +202,43 @@ class ClaudeViewModel: ObservableObject {
         ]
     }
     
-    
-    
-    
-    
-    
-    
-    private func handleWebSocketMessage(_ message: String) {
-        debugLog("Handling WebSocket message: \(message)")
-        guard let data = message.data(using: .utf8),
-              let json = try? JSONSerialization.jsonObject(with: data, options: []) as? [String: Any],
-              let type = json["type"] as? String else {
-            debugLog("Invalid message format")
-            return
-        }
-        
-        DispatchQueue.main.async {
-            switch type {
-            case CLAUDE_MESSAGE_TYPES.CLAUDE_SET_CURRENT_INPUT:
-                if let content = json["content"] as? String {
-                    debugLog("Updating current transcription: \(content)")
-                    self.currentTranscription = content
-                }
-            case CLAUDE_MESSAGE_TYPES.CLAUDE_RESPONSE_PART_RECEIVED,
-                 CLAUDE_MESSAGE_TYPES.CLAUDE_RESPONSE_COMPLETE,
-                 CLAUDE_MESSAGE_TYPES.CLAUDE_SEND_USER_MESSAGE:
-                if let content = json["content"] as? String,
-                   let isUser = json["isUser"] as? Bool {
-                    debugLog("Adding new message: \(content), isUser: \(isUser)")
-                    let newMessage = Message(content: content, isUser: isUser)
-                    self.messages.append(newMessage)
-                    if !isUser && type == CLAUDE_MESSAGE_TYPES.CLAUDE_RESPONSE_COMPLETE {
-                        self.isClaudeTyping = false
-                    }
-                }
-            case CLAUDE_MESSAGE_TYPES.CLAUDE_STATE_CHANGE:
-                if let state = json["state"] as? String {
-                    self.isClaudeTyping = (state == "generating")
-                }
-            default:
-                debugLog("Unknown message type: \(type)")
-            }
-        }
-    }
+    private func handleWebSocketMessage(identifier: String, message: String) {
+           debugLog("Handling WebSocket message from \(identifier): \(message)")
+           guard let data = message.data(using: .utf8),
+                 let json = try? JSONSerialization.jsonObject(with: data, options: []) as? [String: Any],
+                 let type = json["type"] as? String else {
+               debugLog("Invalid message format")
+               return
+           }
+           
+           DispatchQueue.main.async {
+               switch type {
+               case CLAUDE_MESSAGE_TYPES.CLAUDE_SET_CURRENT_INPUT:
+                   if let content = json["content"] as? String {
+                       debugLog("Updating current transcription: \(content)")
+                       self.currentTranscription = content
+                   }
+               case CLAUDE_MESSAGE_TYPES.CLAUDE_RESPONSE_PART_RECEIVED,
+                    CLAUDE_MESSAGE_TYPES.CLAUDE_RESPONSE_COMPLETE,
+                    CLAUDE_MESSAGE_TYPES.CLAUDE_SEND_USER_MESSAGE:
+                   if let content = json["content"] as? String {
+                       let isUser = json["isUser"] as? Bool ?? false
+                       debugLog("Adding new message: \(content), isUser: \(isUser)")
+                       let newMessage = Message(content: content, isUser: isUser)
+                       self.messages.append(newMessage)
+                       if !isUser && type == CLAUDE_MESSAGE_TYPES.CLAUDE_RESPONSE_COMPLETE {
+                           self.isClaudeTyping = false
+                       }
+                   }
+               case CLAUDE_MESSAGE_TYPES.CLAUDE_STATE_CHANGE:
+                   if let state = json["state"] as? String {
+                       self.isClaudeTyping = (state == "generating")
+                   }
+               default:
+                   debugLog("Unknown message type: \(type)")
+               }
+           }
+       }
     
     func sendMessage(_ content: String) {
         let message = [
@@ -249,7 +247,7 @@ class ClaudeViewModel: ObservableObject {
         ]
         if let jsonData = try? JSONSerialization.data(withJSONObject: message),
            let jsonString = String(data: jsonData, encoding: .utf8) {
-            webSocketManager.send(jsonString)
+            webSocketManager.send(jsonString, to: "main")
             self.messages.append(Message(content: content, isUser: true))
             self.isClaudeTyping = true
         }
@@ -547,7 +545,6 @@ struct ChatControlsView: View {
                     }
                 }
             }
-//            .listStyle(InsetGroupedListStyle())
             .navigationTitle("Chat Controls")
             .toolbar {
                 ToolbarItem(placement: .automatic) {

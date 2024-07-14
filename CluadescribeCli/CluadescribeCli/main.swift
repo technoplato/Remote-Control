@@ -54,12 +54,52 @@ struct CLAUDE_MESSAGE_TYPES {
     static let CLAUDE_SUBMIT_CURRENT_INPUT = "CLAUDE.SUBMIT_CURRENT_INPUT"
 }
 
-class SpeechRecognizer: NSObject, SFSpeechRecognizerDelegate, WebSocketDelegate {
+class WebSocketManager {
+    static let shared = WebSocketManager()
+    private var sockets: [String: WebSocket] = [:]
+    
+    private init() {}
+    
+    func createSocket(identifier: String, url: String) {
+        let request = URLRequest(url: URL(string: url)!)
+        let socket = WebSocket(request: request)
+        socket.delegate = self
+        sockets[identifier] = socket
+        socket.connect()
+    }
+    
+    func sendMessage(to identifier: String, message: String) {
+        if let socket = sockets[identifier] {
+            socket.write(string: message)
+        } else {
+            log("Socket with identifier \(identifier) not found")
+        }
+    }
+}
+
+extension WebSocketManager: WebSocketDelegate {
+    func didReceive(event: Starscream.WebSocketEvent, client: any Starscream.WebSocketClient) {
+        switch event {
+        case .connected(let headers):
+            log("WebSocket connected: \(headers)")
+        case .text(let string):
+            log("Received text: \(string)")
+        case .disconnected(let reason, let code):
+            log("WebSocket disconnected: \(reason) with code: \(code)")
+        case .error(let error):
+            log("WebSocket error: \(error?.localizedDescription ?? "Unknown error")")
+        default:
+            break
+        }
+    }
+    
+}
+
+class SpeechRecognizer: NSObject, SFSpeechRecognizerDelegate {
     private let speechRecognizer = SFSpeechRecognizer(locale: Locale(identifier: "en-US"))!
     private var recognitionRequest: SFSpeechAudioBufferRecognitionRequest?
     private var recognitionTask: SFSpeechRecognitionTask?
     private let audioEngine = AVAudioEngine()
-    private var socket: WebSocket?
     private var currentTranscription: String = ""
     private var lastCompletedSection: String = ""
     private var completedSectionCount: Int = 0
@@ -72,12 +112,7 @@ class SpeechRecognizer: NSObject, SFSpeechRecognizerDelegate, WebSocketDelegate 
     
     private func setupWebSocket() {
         log("Setting up WebSocket connection to \(CLAUDE_WS_URL)")
-        var request = URLRequest(url: URL(string: CLAUDE_WS_URL)!)
-        request.timeoutInterval = 5
-        socket = WebSocket(request: request)
-        socket?.delegate = self
-        socket?.connect()
-        log("WebSocket connection attempt initiated")
+        WebSocketManager.shared.createSocket(identifier: "speechRecognizer", url: CLAUDE_WS_URL)
     }
     
     func startRecording() throws {
@@ -101,13 +136,6 @@ class SpeechRecognizer: NSObject, SFSpeechRecognizerDelegate, WebSocketDelegate 
             if let result = result {
                 let transcription = result.bestTranscription.formattedString
                 log("Transcription received: \(transcription)")
-                
-//                // Check for "logging" to toggle logging
-                // Not working and I'm not going to futs about
-//                if transcription.lowercased().contains("logging") {
-//                    isLoggingEnabled.toggle()
-//                    log("Logging " + (isLoggingEnabled ? "enabled" : "disabled"))
-//                }
                 
                 self.processCurrentTranscriptionSection(transcription)
                 
@@ -172,12 +200,6 @@ class SpeechRecognizer: NSObject, SFSpeechRecognizerDelegate, WebSocketDelegate 
         
         log("Current transcription section: \(currentTranscriptionSection)")
         
-//        if currentTranscriptionSection.lowercased().contains("reset") {
-//            currentTranscription = ""
-//            setInputInClaude(currentTranscription)
-//            return
-//        }
-
         // TODO configurable hotwords
         if currentTranscriptionSection.lowercased().contains("jinx") {
             let components = currentTranscriptionSection.components(separatedBy: "jinx")
@@ -220,7 +242,7 @@ class SpeechRecognizer: NSObject, SFSpeechRecognizerDelegate, WebSocketDelegate 
             let jsonData = try JSONSerialization.data(withJSONObject: message)
             if let jsonString = String(data: jsonData, encoding: .utf8) {
                 log("Sending message to WebSocket: \(jsonString)")
-                socket?.write(string: jsonString)
+                WebSocketManager.shared.sendMessage(to: "speechRecognizer", message: jsonString)
             }
         } catch {
             log("Error serializing JSON: \(error.localizedDescription)")
@@ -239,35 +261,6 @@ class SpeechRecognizer: NSObject, SFSpeechRecognizerDelegate, WebSocketDelegate 
             log("Speech recognition became available")
         } else {
             log("Speech recognition became unavailable")
-        }
-    }
-    
-    // MARK: - WebSocketDelegate
-    
-    func didReceive(event: WebSocketEvent, client: WebSocketClient) {
-        switch event {
-        case .connected(let headers):
-            log("WebSocket connected with headers: \(headers)")
-        case .disconnected(let reason, let code):
-            log("WebSocket disconnected with reason: \(reason), code: \(code)")
-        case .text(let string):
-            log("Received text from WebSocket: \(string)")
-        case .binary(let data):
-            log("Received binary data from WebSocket: \(data.count) bytes")
-        case .ping(_):
-            log("Received ping")
-        case .pong(_):
-            log("Received pong")
-        case .viabilityChanged(let isViable):
-            log("WebSocket viability changed: \(isViable)")
-        case .reconnectSuggested(let isSuggested):
-            log("WebSocket reconnect suggested: \(isSuggested)")
-        case .cancelled:
-            log("WebSocket cancelled")
-        case .error(let error):
-            log("WebSocket error: \(error?.localizedDescription ?? "Unknown error")")
-        case .peerClosed:
-            log("WebSocket peer closed")
         }
     }
 }

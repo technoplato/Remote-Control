@@ -101,17 +101,18 @@ const PayloadSchema = z.discriminatedUnion("type", [
 type Payload = z.infer<typeof PayloadSchema>;
 
 // Store WebSocket connections
-const clients = new Set<WebSocket>();
+const clients = new Map<string, WebSocket>();
 
 // Handle WebSocket connections
-wss.on("connection", (ws: WebSocket) => {
-  console.log("New WebSocket connection");
-  clients.add(ws);
+wss.on("connection", (ws: WebSocket, req: http.IncomingMessage) => {
+  const clientId = req.headers["sec-websocket-key"] as string;
+  console.log(`New WebSocket connection: ${clientId}`);
+  clients.set(clientId, ws);
 
   ws.on("message", async (message: string) => {
     try {
       const data = JSON.parse(message);
-      await processWebSocketMessage(data);
+      await processWebSocketMessage(clientId, data);
     } catch (error) {
       console.error("Error processing message:", error);
       ws.send(JSON.stringify({ error: "Invalid message format" }));
@@ -119,13 +120,16 @@ wss.on("connection", (ws: WebSocket) => {
   });
 
   ws.on("close", () => {
-    console.log("WebSocket connection closed");
-    clients.delete(ws);
+    console.log(`WebSocket connection closed: ${clientId}`);
+    clients.delete(clientId);
   });
 });
 
 // Process WebSocket messages
-async function processWebSocketMessage(data: unknown): Promise<void> {
+async function processWebSocketMessage(
+  clientId: string,
+  data: unknown
+): Promise<void> {
   try {
     const payload = PayloadSchema.parse(data);
 
@@ -136,17 +140,19 @@ async function processWebSocketMessage(data: unknown): Promise<void> {
       case CLAUDE_MESSAGE_TYPES.CLAUDE_SEND_USER_MESSAGE:
       case CLAUDE_MESSAGE_TYPES.CLAUDE_SET_CURRENT_INPUT:
       case CLAUDE_MESSAGE_TYPES.CLAUDE_SUBMIT_CURRENT_INPUT:
-        console.log(`Received ${payload.type} event:`, payload);
-        // Send the message to all connected clients
-        clients.forEach((client) => {
-          if (client.readyState === WebSocket.OPEN) {
-            const payload = JSON.stringify(data);
-            console.log(`[would be] Sending payload to client: ${payload}`);
-
-            client.send(payload);
+        console.log(
+          `Received ${payload.type} event from ${clientId}:`,
+          payload
+        );
+        // Send the message to all connected clients except the sender
+        clients.forEach((client, id) => {
+          if (id !== clientId && client.readyState === WebSocket.OPEN) {
+            const payloadString = JSON.stringify(data);
+            console.log(`Sending payload to client ${id}: ${payloadString}`);
+            client.send(payloadString);
           }
         });
-        await updateLogEntry(payload);
+        await updateLogEntry(clientId, payload);
         break;
       default:
         console.error("Unknown message type:", payload.type);
@@ -161,8 +167,8 @@ async function processWebSocketMessage(data: unknown): Promise<void> {
   }
 }
 
-function formatLogEntry(payload: Payload): string {
-  const header = `${payload.timestamp}\nFrom: ${payload.url}\n`;
+function formatLogEntry(clientId: string, payload: Payload): string {
+  const header = `${payload.timestamp}\nFrom: ${clientId}\nURL: ${payload.url}\n`;
   let content = "";
 
   switch (payload.type) {
@@ -187,39 +193,25 @@ function formatLogEntry(payload: Payload): string {
   return `${header}${content}\n`;
 }
 
-async function updateLogEntry(payload: Payload): Promise<void> {
-  return;
-  const logFile = path.join(__dirname, "messages.txt");
-  try {
-    let logContent = await fs.readFile(logFile, "utf-8");
-    const entries = logContent.split("\n\n");
-    const messageId = "messageId" in payload ? payload.messageId : null;
-
-    if (messageId) {
-      const index = entries.findIndex((entry) =>
-        entry.includes(`MessageID: ${messageId}`)
-      );
-      if (index !== -1) {
-        entries[index] = formatLogEntry(payload);
-      } else {
-        entries.push(formatLogEntry(payload));
-      }
-    } else {
-      entries.push(formatLogEntry(payload));
-    }
-
-    logContent = entries.join("\n\n");
-    await fs.writeFile(logFile, logContent);
-  } catch (error) {
-    console.error("Error updating log:", error);
-  }
+async function updateLogEntry(
+  clientId: string,
+  payload: Payload
+): Promise<void> {
+  // Note: This function is currently a no-op. Implement logging as needed.
+  console.log(
+    `Log entry for client ${clientId}:`,
+    formatLogEntry(clientId, payload)
+  );
 }
 
 // API endpoint to send a message to Claude
 app.post("/api/send-message", express.json(), (req, res) => {
-  const { message } = req.body;
+  const { message, clientId } = req.body;
   if (!message) {
     return res.status(400).json({ error: "Message is required" });
+  }
+  if (!clientId) {
+    return res.status(400).json({ error: "Client ID is required" });
   }
 
   const payload: Payload = {
@@ -227,14 +219,14 @@ app.post("/api/send-message", express.json(), (req, res) => {
     content: message,
   };
 
-  // Send the message to all connected clients
-  clients.forEach((client) => {
-    if (client.readyState === WebSocket.OPEN) {
-      client.send(JSON.stringify(payload));
-    }
-  });
-
-  res.json({ success: true });
+  // Send the message to the specified client
+  const client = clients.get(clientId);
+  if (client && client.readyState === WebSocket.OPEN) {
+    client.send(JSON.stringify(payload));
+    res.json({ success: true });
+  } else {
+    res.status(404).json({ error: "Client not found or not connected" });
+  }
 });
 
 // Start the server
