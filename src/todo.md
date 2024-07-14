@@ -4,8 +4,11 @@
 
 ## Currently Working On
 
-- [ ] Have the server keep track of how many tokens you've sent and how many tokens you've received
 - [ ] Build a user interface that works on iOS and macOS for interacting with Claude website
+
+## Next Up
+
+- [ ] Have the server keep track of how many tokens you've sent and how many tokens you've received
 
 ## Done
 
@@ -18,6 +21,7 @@
 - [ ] Add visual indicator for ongoing response without showing full text
 - [ ] Create a locally running chat interface
 - [ ] Develop a simple Swift application for better interaction than reading logs
+- [ ] Auto-scroll to bottom of input text in web interface
 
 ### Core Functionality
 
@@ -44,6 +48,7 @@
 - [ ] Feature to allow others to continue your conversations / conversation collaboration amongst multiple users
 - [ ] Voice mode
 - [ ] Interact with local files
+- [ ] option to publish websites
 
 ### Speech Recognition
 
@@ -51,16 +56,12 @@
 - [ ] If we expose the Speech over websocket, we can use whatever framework for building the UI to potentially make cross platform (e.g., Electron).
   - [ ] If we do that, we can utilize xstate to begin modeling this system more sanely
 
-## Next Up
-
-- [ ] Implement local intent processing (possibly using Llama 7B or Gemma)
-- [ ] Teach Claude how to run commands on local machine and feed back results
-
 ## Nice to Have
 
 - [ ] Integrate with project management tools (milestones, issues, projects)
 - [ ] Implement file change awareness without spamming Claude
-- [ ] Auto-scroll to bottom of input text in web interface
+- [ ] Implement local intent processing (possibly using Llama 7B or Gemma)
+- [ ] Teach Claude how to run commands on local machine and feed back results
 
 ## Bugs
 
