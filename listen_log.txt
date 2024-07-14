@@ -1,3 +1,0 @@
-2024-07-12T12:24:41.714Z: Listening... Say "done" to send the transcribed message to Claude.
-2024-07-12T12:24:41.720Z: Connected to Claude WebSocket
-2024-07-12T12:25:01.502Z: Shutting down...
