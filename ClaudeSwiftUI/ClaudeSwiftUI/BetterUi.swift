@@ -211,10 +211,12 @@ class ClaudeViewModel: ObservableObject {
                     self.currentTranscription = content
                 }
             case "message":
+                print(json)
                 if let content = json["content"] as? String,
                    let isUser = json["isUser"] as? Bool {
                     debugLog("Adding new message: \(content), isUser: \(isUser)")
                     let newMessage = Message(content: content, isUser: isUser)
+                    print(newMessage)
                     self.messages.append(newMessage)
                     if !isUser {
                         self.isClaudeTyping = false

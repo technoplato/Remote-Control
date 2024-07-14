@@ -1,0 +1,134 @@
+DEBUG: Attempting to connect to WebSocket
+DEBUG: Attempting to connect to WebSocket
+DEBUG: Network connection available
+DEBUG: Attempting to connect to WebSocket
+DEBUG: WebSocket connection status changed: false
+DEBUG: WebSocket connection status changed: true
+DEBUG: WebSocket connection status changed: true
+BOOL \_NSPersistentUIDeleteItemAtFileURL(NSURL \*const \_\_strong) Failed to stat item: file:///Users/michael.lustig/Library/Containers/com.knophy.ClaudeSwiftUI/Data/Library/Saved%20Application%20State/com.knophy.ClaudeSwiftUI.savedState/restorecount.plist
+DEBUG: Received WebSocket message: {"content":"Test","type":"set_input"}
+DEBUG: Received WebSocket message: {"content":"Test","type":"set_input"}
+DEBUG: Handling WebSocket message: {"content":"Test","type":"set_input"}
+DEBUG: Handling WebSocket message: {"content":"Test","type":"set_input"}
+DEBUG: Updating current transcription: Test
+DEBUG: Updating current transcription: Test
+DEBUG: Received WebSocket message: {"content":"Testing test","type":"set_input"}
+DEBUG: Handling WebSocket message: {"content":"Testing test","type":"set_input"}
+DEBUG: Updating current transcription: Testing test
+DEBUG: Received WebSocket message: {"content":"Testing testing","type":"set_input"}
+DEBUG: Received WebSocket message: {"content":"Testing testing test","type":"set_input"}
+DEBUG: Handling WebSocket message: {"content":"Testing testing","type":"set_input"}
+DEBUG: Handling WebSocket message: {"content":"Testing testing test","type":"set_input"}
+DEBUG: Updating current transcription: Testing testing
+DEBUG: Updating current transcription: Testing testing test
+DEBUG: Received WebSocket message: {"type":"set_input","content":"Testing testing testing"}
+DEBUG: Handling WebSocket message: {"type":"set_input","content":"Testing testing testing"}
+DEBUG: Updating current transcription: Testing testing testing
+CLIENT ERROR: TUINSRemoteViewController does not override -viewServiceDidTerminateWithError: and thus cannot react to catastrophic errors beyond logging them
+DEBUG: Received WebSocket message: {"content":"Testing testing testing test","type":"set_input"}
+DEBUG: Handling WebSocket message: {"content":"Testing testing testing test","type":"set_input"}
+DEBUG: Updating current transcription: Testing testing testing test
+DEBUG: Received WebSocket message: {"content":"Testing testing testing testing","type":"set_input"}
+DEBUG: Handling WebSocket message: {"content":"Testing testing testing testing","type":"set_input"}
+DEBUG: Updating current transcription: Testing testing testing testing
+DEBUG: Received WebSocket message: {"type":"set_input","content":"Testing testing testing testing test"}
+DEBUG: Handling WebSocket message: {"type":"set_input","content":"Testing testing testing testing test"}
+DEBUG: Updating current transcription: Testing testing testing testing test
+DEBUG: Received WebSocket message: {"content":"Testing testing testing testing testing","type":"set_input"}
+DEBUG: Handling WebSocket message: {"content":"Testing testing testing testing testing","type":"set_input"}
+DEBUG: Updating current transcription: Testing testing testing testing testing
+DEBUG: Received WebSocket message: {"content":"Testing testing testing testing testing test","type":"set_input"}
+DEBUG: Handling WebSocket message: {"content":"Testing testing testing testing testing test","type":"set_input"}
+DEBUG: Updating current transcription: Testing testing testing testing testing test
+DEBUG: Received WebSocket message: {"content":"Testing testing testing testing testing testing","type":"set_input"}
+DEBUG: Handling WebSocket message: {"content":"Testing testing testing testing testing testing","type":"set_input"}
+DEBUG: Updating current transcription: Testing testing testing testing testing testing
+DEBUG: Received WebSocket message: {"type":"set_input","content":"Testing testing testing testing testing testing Jin"}
+DEBUG: Handling WebSocket message: {"type":"set_input","content":"Testing testing testing testing testing testing Jin"}
+DEBUG: Updating current transcription: Testing testing testing testing testing testing Jin
+DEBUG: Received WebSocket message: {"type":"set_input","content":"Testing testing testing testing testing testing"}
+DEBUG: Received WebSocket message: {"type":"submit_input"}
+DEBUG: Handling WebSocket message: {"type":"set_input","content":"Testing testing testing testing testing testing"}
+DEBUG: Handling WebSocket message: {"type":"submit_input"}
+DEBUG: Updating current transcription: Testing testing testing testing testing testing
+DEBUG: Unknown message type: submit_input
+DEBUG: Received WebSocket message: {"type":"claude_state","state":"generating","messageId":"1720958287940","timestamp":"Sunday, July 14, 2024 at 7:58:07 AM EDT","url":"https://claude.ai/chat/ca731933-776b-43a1-aaa8-3b1d694d74cb"}
+DEBUG: Handling WebSocket message: {"type":"claude_state","state":"generating","messageId":"1720958287940","timestamp":"Sunday, July 14, 2024 at 7:58:07 AM EDT","url":"https://claude.ai/chat/ca731933-776b-43a1-aaa8-3b1d694d74cb"}
+DEBUG: Received WebSocket message: {"type":"message","content":"I can see that your","messageId":"1720958287940","timestamp":"Sunday, July 14, 2024 at 7:58:07 AM EDT","url":"https://claude.ai/chat/ca731933-776b-43a1-aaa8-3b1d694d74cb"}
+DEBUG: Handling WebSocket message: {"type":"message","content":"I can see that your","messageId":"1720958287940","timestamp":"Sunday, July 14, 2024 at 7:58:07 AM EDT","url":"https://claude.ai/chat/ca731933-776b-43a1-aaa8-3b1d694d74cb"}
+["url": https://claude.ai/chat/ca731933-776b-43a1-aaa8-3b1d694d74cb, "type": message, "timestamp": Sunday, July 14, 2024 at 7:58:07 AM EDT, "messageId": 1720958287940, "content": I can see that your]
+DEBUG: Received WebSocket message: {"type":"message","content":"I can see that your v","messageId":"1720958287940","timestamp":"Sunday, July 14, 2024 at 7:58:07 AM EDT","url":"https://claude.ai/chat/ca731933-776b-43a1-aaa8-3b1d694d74cb"}
+DEBUG: Handling WebSocket message: {"type":"message","content":"I can see that your v","messageId":"1720958287940","timestamp":"Sunday, July 14, 2024 at 7:58:07 AM EDT","url":"https://claude.ai/chat/ca731933-776b-43a1-aaa8-3b1d694d74cb"}
+["content": I can see that your v, "timestamp": Sunday, July 14, 2024 at 7:58:07 AM EDT, "url": https://claude.ai/chat/ca731933-776b-43a1-aaa8-3b1d694d74cb, "type": message, "messageId": 1720958287940]
+DEBUG: Received WebSocket message: {"type":"message","content":"I can see that your voi","messageId":"1720958287940","timestamp":"Sunday, July 14, 2024 at 7:58:08 AM EDT","url":"https://claude.ai/chat/ca731933-776b-43a1-aaa8-3b1d694d74cb"}
+DEBUG: Handling WebSocket message: {"type":"message","content":"I can see that your voi","messageId":"1720958287940","timestamp":"Sunday, July 14, 2024 at 7:58:08 AM EDT","url":"https://claude.ai/chat/ca731933-776b-43a1-aaa8-3b1d694d74cb"}
+["content": I can see that your voi, "timestamp": Sunday, July 14, 2024 at 7:58:08 AM EDT, "url": https://claude.ai/chat/ca731933-776b-43a1-aaa8-3b1d694d74cb, "type": message, "messageId": 1720958287940]
+DEBUG: Received WebSocket message: {"type":"message","content":"I can see that your voice","messageId":"1720958287940","timestamp":"Sunday, July 14, 2024 at 7:58:08 AM EDT","url":"https://claude.ai/chat/ca731933-776b-43a1-aaa8-3b1d694d74cb"}
+DEBUG: Handling WebSocket message: {"type":"message","content":"I can see that your voice","messageId":"1720958287940","timestamp":"Sunday, July 14, 2024 at 7:58:08 AM EDT","url":"https://claude.ai/chat/ca731933-776b-43a1-aaa8-3b1d694d74cb"}
+["url": https://claude.ai/chat/ca731933-776b-43a1-aaa8-3b1d694d74cb, "type": message, "timestamp": Sunday, July 14, 2024 at 7:58:08 AM EDT, "messageId": 1720958287940, "content": I can see that your voice]
+DEBUG: Received WebSocket message: {"type":"message","content":"I can see that your voice i","messageId":"1720958287940","timestamp":"Sunday, July 14, 2024 at 7:58:08 AM EDT","url":"https://claude.ai/chat/ca731933-776b-43a1-aaa8-3b1d694d74cb"}
+DEBUG: Handling WebSocket message: {"type":"message","content":"I can see that your voice i","messageId":"1720958287940","timestamp":"Sunday, July 14, 2024 at 7:58:08 AM EDT","url":"https://claude.ai/chat/ca731933-776b-43a1-aaa8-3b1d694d74cb"}
+["url": https://claude.ai/chat/ca731933-776b-43a1-aaa8-3b1d694d74cb, "type": message, "timestamp": Sunday, July 14, 2024 at 7:58:08 AM EDT, "messageId": 1720958287940, "content": I can see that your voice i]
+DEBUG: Received WebSocket message: {"type":"message","content":"I can see that your voice inp","messageId":"1720958287940","timestamp":"Sunday, July 14, 2024 at 7:58:08 AM EDT","url":"https://claude.ai/chat/ca731933-776b-43a1-aaa8-3b1d694d74cb"}
+DEBUG: Handling WebSocket message: {"type":"message","content":"I can see that your voice inp","messageId":"1720958287940","timestamp":"Sunday, July 14, 2024 at 7:58:08 AM EDT","url":"https://claude.ai/chat/ca731933-776b-43a1-aaa8-3b1d694d74cb"}
+["url": https://claude.ai/chat/ca731933-776b-43a1-aaa8-3b1d694d74cb, "type": message, "timestamp": Sunday, July 14, 2024 at 7:58:08 AM EDT, "messageId": 1720958287940, "content": I can see that your voice inp]
+DEBUG: Received WebSocket message: {"type":"message","content":"I can see that your voice inpu","messageId":"1720958287940","timestamp":"Sunday, July 14, 2024 at 7:58:08 AM EDT","url":"https://claude.ai/chat/ca731933-776b-43a1-aaa8-3b1d694d74cb"}
+DEBUG: Handling WebSocket message: {"type":"message","content":"I can see that your voice inpu","messageId":"1720958287940","timestamp":"Sunday, July 14, 2024 at 7:58:08 AM EDT","url":"https://claude.ai/chat/ca731933-776b-43a1-aaa8-3b1d694d74cb"}
+["url": https://claude.ai/chat/ca731933-776b-43a1-aaa8-3b1d694d74cb, "type": message, "timestamp": Sunday, July 14, 2024 at 7:58:08 AM EDT, "messageId": 1720958287940, "content": I can see that your voice inpu]
+DEBUG: Received WebSocket message: {"type":"message","content":"I can see that your voice input","messageId":"1720958287940","timestamp":"Sunday, July 14, 2024 at 7:58:08 AM EDT","url":"https://claude.ai/chat/ca731933-776b-43a1-aaa8-3b1d694d74cb"}
+DEBUG: Handling WebSocket message: {"type":"message","content":"I can see that your voice input","messageId":"1720958287940","timestamp":"Sunday, July 14, 2024 at 7:58:08 AM EDT","url":"https://claude.ai/chat/ca731933-776b-43a1-aaa8-3b1d694d74cb"}
+["messageId": 1720958287940, "content": I can see that your voice input, "type": message, "url": https://claude.ai/chat/ca731933-776b-43a1-aaa8-3b1d694d74cb, "timestamp": Sunday, July 14, 2024 at 7:58:08 AM EDT]
+DEBUG: Received WebSocket message: {"type":"message","content":"I can see that your voice input is","messageId":"1720958287940","timestamp":"Sunday, July 14, 2024 at 7:58:08 AM EDT","url":"https://claude.ai/chat/ca731933-776b-43a1-aaa8-3b1d694d74cb"}
+DEBUG: Handling WebSocket message: {"type":"message","content":"I can see that your voice input is","messageId":"1720958287940","timestamp":"Sunday, July 14, 2024 at 7:58:08 AM EDT","url":"https://claude.ai/chat/ca731933-776b-43a1-aaa8-3b1d694d74cb"}
+["url": https://claude.ai/chat/ca731933-776b-43a1-aaa8-3b1d694d74cb, "type": message, "timestamp": Sunday, July 14, 2024 at 7:58:08 AM EDT, "messageId": 1720958287940, "content": I can see that your voice input is]
+DEBUG: Received WebSocket message: {"type":"message","content":"I can see that your voice input is w","messageId":"1720958287940","timestamp":"Sunday, July 14, 2024 at 7:58:08 AM EDT","url":"https://claude.ai/chat/ca731933-776b-43a1-aaa8-3b1d694d74cb"}
+DEBUG: Handling WebSocket message: {"type":"message","content":"I can see that your voice input is w","messageId":"1720958287940","timestamp":"Sunday, July 14, 2024 at 7:58:08 AM EDT","url":"https://claude.ai/chat/ca731933-776b-43a1-aaa8-3b1d694d74cb"}
+["url": https://claude.ai/chat/ca731933-776b-43a1-aaa8-3b1d694d74cb, "type": message, "timestamp": Sunday, July 14, 2024 at 7:58:08 AM EDT, "messageId": 1720958287940, "content": I can see that your voice input is w]
+DEBUG: Received WebSocket message: {"type":"message","content":"I can see that your voice input is wo","messageId":"1720958287940","timestamp":"Sunday, July 14, 2024 at 7:58:08 AM EDT","url":"https://claude.ai/chat/ca731933-776b-43a1-aaa8-3b1d694d74cb"}
+DEBUG: Handling WebSocket message: {"type":"message","content":"I can see that your voice input is wo","messageId":"1720958287940","timestamp":"Sunday, July 14, 2024 at 7:58:08 AM EDT","url":"https://claude.ai/chat/ca731933-776b-43a1-aaa8-3b1d694d74cb"}
+["messageId": 1720958287940, "content": I can see that your voice input is wo, "type": message, "url": https://claude.ai/chat/ca731933-776b-43a1-aaa8-3b1d694d74cb, "timestamp": Sunday, July 14, 2024 at 7:58:08 AM EDT]
+DEBUG: Received WebSocket message: {"type":"message","content":"I can see that your voice input is work","messageId":"1720958287940","timestamp":"Sunday, July 14, 2024 at 7:58:08 AM EDT","url":"https://claude.ai/chat/ca731933-776b-43a1-aaa8-3b1d694d74cb"}
+DEBUG: Handling WebSocket message: {"type":"message","content":"I can see that your voice input is work","messageId":"1720958287940","timestamp":"Sunday, July 14, 2024 at 7:58:08 AM EDT","url":"https://claude.ai/chat/ca731933-776b-43a1-aaa8-3b1d694d74cb"}
+["messageId": 1720958287940, "content": I can see that your voice input is work, "type": message, "url": https://claude.ai/chat/ca731933-776b-43a1-aaa8-3b1d694d74cb, "timestamp": Sunday, July 14, 2024 at 7:58:08 AM EDT]
+DEBUG: Received WebSocket message: {"type":"message","content":"I can see that your voice input is workin","messageId":"1720958287940","timestamp":"Sunday, July 14, 2024 at 7:58:08 AM EDT","url":"https://claude.ai/chat/ca731933-776b-43a1-aaa8-3b1d694d74cb"}
+DEBUG: Handling WebSocket message: {"type":"message","content":"I can see that your voice input is workin","messageId":"1720958287940","timestamp":"Sunday, July 14, 2024 at 7:58:08 AM EDT","url":"https://claude.ai/chat/ca731933-776b-43a1-aaa8-3b1d694d74cb"}
+["messageId": 1720958287940, "content": I can see that your voice input is workin, "type": message, "url": https://claude.ai/chat/ca731933-776b-43a1-aaa8-3b1d694d74cb, "timestamp": Sunday, July 14, 2024 at 7:58:08 AM EDT]
+DEBUG: Received WebSocket message: {"type":"message","content":"I can see that your voice input is working,","messageId":"1720958287940","timestamp":"Sunday, July 14, 2024 at 7:58:08 AM EDT","url":"https://claude.ai/chat/ca731933-776b-43a1-aaa8-3b1d694d74cb"}
+DEBUG: Handling WebSocket message: {"type":"message","content":"I can see that your voice input is working,","messageId":"1720958287940","timestamp":"Sunday, July 14, 2024 at 7:58:08 AM EDT","url":"https://claude.ai/chat/ca731933-776b-43a1-aaa8-3b1d694d74cb"}
+["messageId": 1720958287940, "content": I can see that your voice input is working,, "type": message, "url": https://claude.ai/chat/ca731933-776b-43a1-aaa8-3b1d694d74cb, "timestamp": Sunday, July 14, 2024 at 7:58:08 AM EDT]
+DEBUG: Received WebSocket message: {"type":"message","content":"I can see that your voice input is working, a","messageId":"1720958287940","timestamp":"Sunday, July 14, 2024 at 7:58:08 AM EDT","url":"https://claude.ai/chat/ca731933-776b-43a1-aaa8-3b1d694d74cb"}
+DEBUG: Handling WebSocket message: {"type":"message","content":"I can see that your voice input is working, a","messageId":"1720958287940","timestamp":"Sunday, July 14, 2024 at 7:58:08 AM EDT","url":"https://claude.ai/chat/ca731933-776b-43a1-aaa8-3b1d694d74cb"}
+["url": https://claude.ai/chat/ca731933-776b-43a1-aaa8-3b1d694d74cb, "type": message, "timestamp": Sunday, July 14, 2024 at 7:58:08 AM EDT, "messageId": 1720958287940, "content": I can see that your voice input is working, a]
+DEBUG: Received WebSocket message: {"type":"message","content":"I can see that your voice input is working, as","messageId":"1720958287940","timestamp":"Sunday, July 14, 2024 at 7:58:08 AM EDT","url":"https://claude.ai/chat/ca731933-776b-43a1-aaa8-3b1d694d74cb"}
+DEBUG: Handling WebSocket message: {"type":"message","content":"I can see that your voice input is working, as","messageId":"1720958287940","timestamp":"Sunday, July 14, 2024 at 7:58:08 AM EDT","url":"https://claude.ai/chat/ca731933-776b-43a1-aaa8-3b1d694d74cb"}
+["url": https://claude.ai/chat/ca731933-776b-43a1-aaa8-3b1d694d74cb, "type": message, "timestamp": Sunday, July 14, 2024 at 7:58:08 AM EDT, "messageId": 1720958287940, "content": I can see that your voice input is working, as]
+DEBUG: Received WebSocket message: {"type":"message","content":"I can see that your voice input is working, as t","messageId":"1720958287940","timestamp":"Sunday, July 14, 2024 at 7:58:08 AM EDT","url":"https://claude.ai/chat/ca731933-776b-43a1-aaa8-3b1d694d74cb"}
+DEBUG: Handling WebSocket message: {"type":"message","content":"I can see that your voice input is working, as t","messageId":"1720958287940","timestamp":"Sunday, July 14, 2024 at 7:58:08 AM EDT","url":"https://claude.ai/chat/ca731933-776b-43a1-aaa8-3b1d694d74cb"}
+["messageId": 1720958287940, "content": I can see that your voice input is working, as t, "type": message, "url": https://claude.ai/chat/ca731933-776b-43a1-aaa8-3b1d694d74cb, "timestamp": Sunday, July 14, 2024 at 7:58:08 AM EDT]
+DEBUG: Received WebSocket message: {"type":"message","content":"I can see that your voice input is working, as the","messageId":"1720958287940","timestamp":"Sunday, July 14, 2024 at 7:58:08 AM EDT","url":"https://claude.ai/chat/ca731933-776b-43a1-aaa8-3b1d694d74cb"}
+DEBUG: Handling WebSocket message: {"type":"message","content":"I can see that your voice input is working, as the","messageId":"1720958287940","timestamp":"Sunday, July 14, 2024 at 7:58:08 AM EDT","url":"https://claude.ai/chat/ca731933-776b-43a1-aaa8-3b1d694d74cb"}
+["content": I can see that your voice input is working, as the, "timestamp": Sunday, July 14, 2024 at 7:58:08 AM EDT, "url": https://claude.ai/chat/ca731933-776b-43a1-aaa8-3b1d694d74cb, "type": message, "messageId": 1720958287940]
+DEBUG: Received WebSocket message: {"type":"message","content":"I can see that your voice input is working, as the t","messageId":"1720958287940","timestamp":"Sunday, July 14, 2024 at 7:58:08 AM EDT","url":"https://claude.ai/chat/ca731933-776b-43a1-aaa8-3b1d694d74cb"}
+DEBUG: Handling WebSocket message: {"type":"message","content":"I can see that your voice input is working, as the t","messageId":"1720958287940","timestamp":"Sunday, July 14, 2024 at 7:58:08 AM EDT","url":"https://claude.ai/chat/ca731933-776b-43a1-aaa8-3b1d694d74cb"}
+["content": I can see that your voice input is working, as the t, "timestamp": Sunday, July 14, 2024 at 7:58:08 AM EDT, "url": https://claude.ai/chat/ca731933-776b-43a1-aaa8-3b1d694d74cb, "type": message, "messageId": 1720958287940]
+DEBUG: Received WebSocket message: {"type":"message","content":"I can see that your voice input is working, as the tr","messageId":"1720958287940","timestamp":"Sunday, July 14, 2024 at 7:58:08 AM EDT","url":"https://claude.ai/chat/ca731933-776b-43a1-aaa8-3b1d694d74cb"}
+DEBUG: Handling WebSocket message: {"type":"message","content":"I can see that your voice input is working, as the tr","messageId":"1720958287940","timestamp":"Sunday, July 14, 2024 at 7:58:08 AM EDT","url":"https://claude.ai/chat/ca731933-776b-43a1-aaa8-3b1d694d74cb"}
+["content": I can see that your voice input is working, as the tr, "url": https://claude.ai/chat/ca731933-776b-43a1-aaa8-3b1d694d74cb, "timestamp": Sunday, July 14, 2024 at 7:58:08 AM EDT, "type": message, "messageId": 1720958287940]
+DEBUG: Received WebSocket message: {"type":"message","content":"I can see that your voice input is working, as the tran","messageId":"1720958287940","timestamp":"Sunday, July 14, 2024 at 7:58:08 AM EDT","url":"https://claude.ai/chat/ca731933-776b-43a1-aaa8-3b1d694d74cb"}
+DEBUG: Handling WebSocket message: {"type":"message","content":"I can see that your voice input is working, as the tran","messageId":"1720958287940","timestamp":"Sunday, July 14, 2024 at 7:58:08 AM EDT","url":"https://claude.ai/chat/ca731933-776b-43a1-aaa8-3b1d694d74cb"}
+["content": I can see that your voice input is working, as the tran, "url": https://claude.ai/chat/ca731933-776b-43a1-aaa8-3b1d694d74cb, "timestamp": Sunday, July 14, 2024 at 7:58:08 AM EDT, "type": message, "messageId": 1720958287940]
+DEBUG: Received WebSocket message: {"type":"message","content":"I can see that your voice input is working, as the transc","messageId":"1720958287940","timestamp":"Sunday, July 14, 2024 at 7:58:08 AM EDT","url":"https://claude.ai/chat/ca731933-776b-43a1-aaa8-3b1d694d74cb"}
+DEBUG: Handling WebSocket message: {"type":"message","content":"I can see that your voice input is working, as the transc","messageId":"1720958287940","timestamp":"Sunday, July 14, 2024 at 7:58:08 AM EDT","url":"https://claude.ai/chat/ca731933-776b-43a1-aaa8-3b1d694d74cb"}
+["content": I can see that your voice input is working, as the transc, "url": https://claude.ai/chat/ca731933-776b-43a1-aaa8-3b1d694d74cb, "timestamp": Sunday, July 14, 2024 at 7:58:08 AM EDT, "type": message, "messageId": 1720958287940]
+DEBUG: Received WebSocket message: {"type":"message","content":"I can see that your voice input is working, as the transcri","messageId":"1720958287940","timestamp":"Sunday, July 14, 2024 at 7:58:08 AM EDT","url":"https://claude.ai/chat/ca731933-776b-43a1-aaa8-3b1d694d74cb"}
+DEBUG: Handling WebSocket message: {"type":"message","content":"I can see that your voice input is working, as the transcri","messageId":"1720958287940","timestamp":"Sunday, July 14, 2024 at 7:58:08 AM EDT","url":"https://claude.ai/chat/ca731933-776b-43a1-aaa8-3b1d694d74cb"}
+["content": I can see that your voice input is working, as the transcri, "url": https://claude.ai/chat/ca731933-776b-43a1-aaa8-3b1d694d74cb, "timestamp": Sunday, July 14, 2024 at 7:58:08 AM EDT, "type": message, "messageId": 1720958287940]
+DEBUG: Received WebSocket message: {"type":"message","content":"I can see that your voice input is working, as the transcripti","messageId":"1720958287940","timestamp":"Sunday, July 14, 2024 at 7:58:08 AM EDT","url":"https://claude.ai/chat/ca731933-776b-43a1-aaa8-3b1d694d74cb"}
+DEBUG: Handling WebSocket message: {"type":"message","content":"I can see that your voice input is working, as the transcripti","messageId":"1720958287940","timestamp":"Sunday, July 14, 2024 at 7:58:08 AM EDT","url":"https://claude.ai/chat/ca731933-776b-43a1-aaa8-3b1d694d74cb"}
+["url": https://claude.ai/chat/ca731933-776b-43a1-aaa8-3b1d694d74cb, "type": message, "timestamp": Sunday, July 14, 2024 at 7:58:08 AM EDT, "messageId": 1720958287940, "content": I can see that your voice input is working, as the transcripti]
+DEBUG: Received WebSocket message: {"type":"message","content":"I can see that your voice input is working, as the transcriptio","messageId":"1720958287940","timestamp":"Sunday, July 14, 2024 at 7:58:08 AM EDT","url":"https://claude.ai/chat/ca731933-776b-43a1-aaa8-3b1d694d74cb"}
+DEBUG: Handling WebSocket message: {"type":"message","content":"I can see that your voice input is working, as the transcriptio","messageId":"1720958287940","timestamp":"Sunday, July 14, 2024 at 7:58:08 AM EDT","url":"https://claude.ai/chat/ca731933-776b-43a1-aaa8-3b1d694d74cb"}
+["content": I can see that your voice input is working, as the transcriptio, "url": https://claude.ai/chat/ca731933-776b-43a1-aaa8-3b1d694d74cb, "timestamp": Sunday, July 14, 2024 at 7:58:08 AM EDT, "type": message, "messageId": 1720958287940]
+DEBUG: Received WebSocket message: {"type":"message","content":"I can see that your voice input is working, as the transcription \"","messageId":"1720958287940","timestamp":"Sunday, July 14, 2024 at 7:58:08 AM EDT","url":"https://claude.ai/chat/ca731933-776b-43a1-aaa8-3b1d694d74cb"}
+DEBUG: Handling WebSocket message: {"type":"message","content":"I can see that your voice input is working, as the transcription \"","messageId":"1720958287940","timestamp":"Sunday, July 14, 2024 at 7:58:08 AM EDT","url":"https://claude.ai/chat/ca731933-776b-43a1-aaa8-3b1d694d74cb"}
+["url": https://claude.ai/chat/ca731933-776b-43a1-aaa8-3b1d694d74cb, "type": message, "timestamp": Sunday, July 14, 2024 at 7:58:08 AM EDT, "messageId": 1720958287940, "content": I can see that your voice input is working, as the transcription "]

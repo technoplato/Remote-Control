@@ -72,3 +72,4 @@
 - [ ] Fix binary data reception in messages.txt
 - [ ] Address speech recognition accuracy (e.g., "GitHub" recognized as "GET HUB", "Composable" as "compostable")
 - [ ] SwiftUI client doesn't reconnect to websocket if server restarts
+- [ ] If the user sends the message, future transcriptions aren't sent to Claude
