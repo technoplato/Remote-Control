@@ -218,9 +218,9 @@ class ClaudeViewModel: ObservableObject {
                        debugLog("Updating current transcription: \(content)")
                        self.currentTranscription = content
                    }
-               case CLAUDE_MESSAGE_TYPES.CLAUDE_RESPONSE_PART_RECEIVED,
-                    CLAUDE_MESSAGE_TYPES.CLAUDE_RESPONSE_COMPLETE,
-                    CLAUDE_MESSAGE_TYPES.CLAUDE_SEND_USER_MESSAGE:
+//               case CLAUDE_MESSAGE_TYPES.CLAUDE_RESPONSE_PART_RECEIVED,
+                    case CLAUDE_MESSAGE_TYPES.CLAUDE_RESPONSE_COMPLETE:
+//                    CLAUDE_MESSAGE_TYPES.CLAUDE_SEND_USER_MESSAGE:
                    if let content = json["content"] as? String {
                        let isUser = json["isUser"] as? Bool ?? false
                        debugLog("Adding new message: \(content), isUser: \(isUser)")
