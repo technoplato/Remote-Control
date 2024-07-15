@@ -139,8 +139,8 @@ class SpeechRecognizer: NSObject, SFSpeechRecognizerDelegate {
                 
                 self.processCurrentTranscriptionSection(transcription)
                 
-                // Debug: Split transcription by "jinx" and print relevant section
-                let sections = transcription.components(separatedBy: "jinx")
+                // Debug: Split transcription by "zap" and print relevant section
+                let sections = transcription.components(separatedBy: "zap")
                 if self.completedSectionCount < sections.count {
                     log("Current section (debug): \(sections[self.completedSectionCount])")
                 }
@@ -201,16 +201,16 @@ class SpeechRecognizer: NSObject, SFSpeechRecognizerDelegate {
         log("Current transcription section: \(currentTranscriptionSection)")
         
         // TODO configurable hotwords
-        if currentTranscriptionSection.lowercased().contains("jinx") {
-            let components = currentTranscriptionSection.components(separatedBy: "jinx")
+        if currentTranscriptionSection.lowercased().contains("zap") {
+            let components = currentTranscriptionSection.components(separatedBy: "zap")
             if !components.isEmpty {
                 let completedSection = components[0].trimmingCharacters(in: .whitespacesAndNewlines)
                 if !completedSection.isEmpty {
                     log("Sending completed section: \(completedSection)")
                     sendTranscriptionToClaude(completedSection)
-                    lastCompletedSection = fullTranscription.components(separatedBy: "jinx")[0...completedSectionCount].joined(separator: "jinx") + "jinx"
+                    lastCompletedSection = fullTranscription.components(separatedBy: "zap")[0...completedSectionCount].joined(separator: "zap") + "zap"
                     completedSectionCount += 1
-                    currentTranscription = components.dropFirst().joined(separator: "jinx").trimmingCharacters(in: .whitespacesAndNewlines)
+                    currentTranscription = components.dropFirst().joined(separator: "zap").trimmingCharacters(in: .whitespacesAndNewlines)
                 }
             }
         } else {

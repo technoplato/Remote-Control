@@ -1,4 +1,4 @@
-// Claude Remote Control Client Script with Verbose Logging
+// Claude Remote Control Client Script with Combined Functionality and Enhanced Logging
 
 (function () {
   "use strict";
@@ -6,44 +6,12 @@
   const WS_SERVER_URL = "ws://localhost:3000";
   let socket;
 
-  /**
-   * Message types for Claude Remote Control system
-   */
   const CLAUDE_MESSAGE_TYPES = {
-    /**
-     * Sent when Claude starts or stops generating a response
-     * Triggered by: Claude beginning to type or finishing a response
-     */
     CLAUDE_STATE_CHANGE: "CLAUDE.STATE_CHANGE",
-
-    /**
-     * Sent when a part of Claude's response is received
-     * Triggered by: Claude generating part of a response
-     */
     CLAUDE_RESPONSE_PART_RECEIVED: "CLAUDE.RESPONSE_PART_RECEIVED",
-
-    /**
-     * Sent when a complete message from Claude is received
-     * Triggered by: Claude finishing a complete response
-     */
     CLAUDE_RESPONSE_COMPLETE: "CLAUDE.RESPONSE_COMPLETE",
-
-    /**
-     * Sent when a user message is to be sent to Claude
-     * Triggered by: User submitting a message in the UI
-     */
     CLAUDE_SEND_USER_MESSAGE: "CLAUDE.SEND_USER_MESSAGE",
-
-    /**
-     * Sent when setting the current input in the Claude interface
-     * Triggered by: Real-time speech transcription updates
-     */
     CLAUDE_SET_CURRENT_INPUT: "CLAUDE.SET_CURRENT_INPUT",
-
-    /**
-     * Sent when submitting the current input to Claude
-     * Triggered by: User finalizing their input (e.g., after speech recognition is complete)
-     */
     CLAUDE_SUBMIT_CURRENT_INPUT: "CLAUDE.SUBMIT_CURRENT_INPUT",
   };
 
@@ -70,7 +38,6 @@
 
     socket.onmessage = (event) => {
       const data = JSON.parse(event.data);
-      log(`Received message from server: ${JSON.stringify(data)}`);
       if (data.type === CLAUDE_MESSAGE_TYPES.CLAUDE_SET_CURRENT_INPUT) {
         setInputInClaude(data.content);
       } else if (
@@ -85,7 +52,7 @@
 
   function sendToServer(data) {
     if (socket && socket.readyState === WebSocket.OPEN) {
-      log(`Sending to server: ${JSON.stringify(data)}`);
+      // log(`Sending to server: ${JSON.stringify(data)}`);
       socket.send(JSON.stringify(data));
     } else {
       log("WebSocket is not connected");
@@ -111,57 +78,32 @@
   }
 
   function setInputInClaude(message) {
-    log("Attempting to set input in Claude...");
-
     const messageInput = document.querySelector(
       '.ProseMirror[contenteditable="true"]'
     );
-    log(messageInput ? "Message input found" : "Message input not found");
     if (messageInput) {
-      log(`Message input details: ${messageInput.outerHTML}`);
-
-      // Set the message content
-      log("Setting message content...");
       messageInput.textContent = message;
-      log("Message content set");
-
-      // Dispatch an input event to trigger any necessary UI updates
-      log("Dispatching input event...");
       messageInput.dispatchEvent(new Event("input", { bubbles: true }));
-      log("Input event dispatched");
     } else {
       log("Failed to find message input");
-      log("Current page HTML:");
-      log(document.body.innerHTML);
     }
   }
 
   function submitInputToClaude() {
-    log("Attempting to submit input to Claude...");
-
     const sendButton = document.querySelector(
       'button[aria-label="Send Message"]'
     );
     if (sendButton && !sendButton.disabled) {
-      log("Send button found and clickable");
-      log(`Send button details: ${sendButton.outerHTML}`);
       sendButton.click();
-      log("Send button clicked");
-
-      // Clear the input after submission
       setTimeout(() => {
         const messageInput = document.querySelector(
           '.ProseMirror[contenteditable="true"]'
         );
         if (messageInput) {
-          log("Clearing input...");
           messageInput.textContent = "";
           messageInput.dispatchEvent(new Event("input", { bubbles: true }));
-          log("Input cleared");
-        } else {
-          log("Failed to find message input for clearing");
         }
-      }, 100); // Short delay to ensure the message is sent before clearing
+      }, 100);
     } else {
       log("Send button not found or disabled");
     }
@@ -173,12 +115,39 @@
       log("Chat container not found");
       throw new Error("Chat container not found, cant do anything");
     }
-    log("Chat container found, setting up observer");
 
     let currentMessageId = null;
+    let isGenerating = false;
     let lastContent = "";
 
     const observer = new MutationObserver((mutations) => {
+      log("Mutation observed in chat container");
+
+      const stateIndicator = document.querySelector(
+        ".ml-1.mt-0\\.5.flex.items-center.transition-transform.duration-300.ease-out"
+      );
+      if (!stateIndicator) {
+        log("State indicator not found");
+      } else {
+        const warningLink = stateIndicator.querySelector("a");
+        if (!warningLink) {
+          log("Warning link not found");
+        } else {
+          log(`State indicator classes: ${stateIndicator.className}`);
+          log(`Warning link opacity: ${warningLink.style.opacity}`);
+          log(`Current isGenerating state: ${isGenerating}`);
+
+          const newIsGenerating =
+            stateIndicator.classList.contains("-translate-y-2.5") &&
+            warningLink.style.opacity === "0";
+
+          if (newIsGenerating !== isGenerating) {
+            isGenerating = newIsGenerating;
+            log(`Claude state changed. Is generating: ${isGenerating}`);
+          }
+        }
+      }
+
       for (const mutation of mutations) {
         if (mutation.type === "childList") {
           const addedNode = mutation.addedNodes[0];
@@ -188,10 +157,10 @@
               log("Found Claude response div");
               const isStreaming =
                 responseDiv.getAttribute("data-is-streaming") === "true";
-              const messageId = Date.now().toString();
+              log(`Is streaming: ${isStreaming}`);
 
-              if (isStreaming) {
-                currentMessageId = messageId;
+              if (isStreaming && !currentMessageId) {
+                currentMessageId = Date.now().toString();
                 log(
                   `Claude started generating (MessageID: ${currentMessageId})`
                 );
@@ -202,7 +171,7 @@
                   timestamp: getFormattedTimestamp(),
                   url: getCurrentChatUrl(),
                 });
-              } else {
+              } else if (!isStreaming && currentMessageId) {
                 log(
                   `Claude finished generating (MessageID: ${currentMessageId})`
                 );
@@ -225,7 +194,9 @@
                   .join("\n\n");
 
                 if (content !== lastContent) {
-                  log(`Content updated (MessageID: ${currentMessageId})`);
+                  log(
+                    `Content updated (MessageID: ${currentMessageId || "N/A"})`
+                  );
                   log(`New content: ${content}`);
                   sendToServer({
                     type: CLAUDE_MESSAGE_TYPES.CLAUDE_RESPONSE_PART_RECEIVED,
@@ -259,7 +230,6 @@
       log("Chat container not found");
       return;
     }
-    log("Chat container found, setting up observer for user messages");
 
     const observer = new MutationObserver((mutations) => {
       for (const mutation of mutations) {
@@ -298,7 +268,5 @@
   }
 
   initMonitors();
-  log(
-    "Claude Remote Control Client Script with Verbose Logging is now running."
-  );
+  log("Claude Remote Control Client Script is now running.");
 })();
